@@ -7,7 +7,7 @@ Created on Sat Nov 16 16:54:04 2019
 """
 
 
-import pyvisa as visa #VISA for connecting to instruments
+import pyvisa as visa
 
 import math #nan-strings
 import time #waiting
@@ -107,6 +107,11 @@ if __name__ == '__main__': # test if called as executable, not as library
     
     set_settletime(1)
         
+    psu_set(visa_PSU,False,False)
+    psu_set(visa_PSU,ch1_clim =0.1,ch1_volt=30) #major range change to make it kachunck (relais action)
     psu_set(visa_PSU,True,False) 
     psu_set(visa_PSU,ch1_clim =0.1,ch1_volt=5)
     psu_set(visa_PSU,False,False) 
+    
+    visa_PSU.close()
+    del visa_PSU

@@ -11,6 +11,10 @@ import visa
 import numpy as np
 from enum import Enum
 
+# ToDo:
+# more visa error types to see why oszi doesn't always behave on init (psu does now)
+
+# how useful is it to directly use usbtmc, if it's in the backend of pyvisa anyway...? probably not very...
 class drv(Enum):
 	tmc = 'usbtmc'
 	pyv = 'py-visa' # data read raw (graphs) does not work at the moment
@@ -34,28 +38,33 @@ def init():
     # for some reason, it's lucky to query the keysight oszi first...
     
     myprint("querying instruments..")
-    for instrument in instruments:
-        print(instrument)
-        try:
-            delay=0.5
-            if "NPD" in instrument:
-                delay=1
+    if len(instruments)<0:
+        myprint("no instruments: sad puppy.")
+    else:
+        myprint("say hello")
+        for instrument in instruments:
+            print(instrument)
+            try:
+                delay=0.5
+                if "NPD" in instrument:
+                    delay=1
+                    
+                my_instrument = rm.open_resource(instrument, query_delay = delay) #spd3303c needs delay
+                identity = my_instrument.query('*IDN?')
+                myprint("Resource: '" + instrument + "' is")
+                myprint(identity + '\n')
+                myinstruments.append(instrument)
                 
-            my_instrument = rm.open_resource(instrument, query_delay = delay) #spd3303c needs delay
-            identity = my_instrument.query('*IDN?')
-            myprint("Resource: '" + instrument + "' is")
-            myprint(identity + '\n')
-            myinstruments.append(instrument)
-            my_instrument.close() # shut down
-        except visa.VisaIOError:
-           myprint('No connection to: ' + instrument)
-        except:
-            myprint("Unexpected error:", sys.exc_info()[0])
-            myprint("maybe resource busy, i.e. increase query_delay or unplug-replug")
-    
-def getinstruments():
-    global myinstruments
-    return(myinstruments)
+                print("cleanup after idn")
+                my_instrument.close() # shut down
+                del my_instrument
+                
+            except visa.VisaIOError:
+               myprint('No connection to: ' + instrument)
+            except:
+                myprint("Unexpected error:", sys.exc_info()[0])
+                myprint("maybe resource busy, i.e. increase query_delay or unplug-replug")
+
 
 def getinstrument(name,qdelay=0): #name segment as input
     global myinstruments, rm
@@ -67,6 +76,7 @@ def getinstrument(name,qdelay=0): #name segment as input
     #else, this happens:        
     return(0)
 
+
 def getrm():
     global rm
     return(rm)
@@ -75,6 +85,9 @@ def setprint(function): # to redirect print to pdf, etc.
 	global myprint
 	myprint=function
 
+
+
+############# keysighthelper things
 def writer(st):
 	global instr, driver, lastcmd
 	# same, regardless of pyvisa/tmc, for now

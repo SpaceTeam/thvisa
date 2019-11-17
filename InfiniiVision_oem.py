@@ -6,6 +6,8 @@ Created on Sat Nov 16 19:47:52 2019
 @author: thirschbuechler
 """
 
+# ToDo:
+# regex replace 3 capital letter words with lowercase (better readability)
 import time #waits
 import string #keysight wants them
 import struct #keysight wants them
@@ -353,7 +355,7 @@ if __name__ == '__main__': # test if called as executable, not as library
     instr=thvisa.getinstrument("CN5727",0.5)
     
     
-    instr.timeout = 15000
+    instr.timeout = 15000 # https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout
     instr.clear()
     # Initialize the oscilloscope, capture data, and analyze.
     initialize()
