@@ -60,10 +60,17 @@ def init():
                 del my_instrument
                 
             except visa.VisaIOError:
-               myprint('No connection to: ' + instrument)
+               myprint('VisaError: No connection to: ' + instrument+", maybe chunk size or msg timeout, query_delay")
+               # like VisaIOError.VI_ERROR_INV_SETUP VisaIOError.VI_ERROR_CONN_LOST:               
+            except visa.InvalidSession:
+                myprint("VisaError: session closed before access") # tested via closing session before "IDN?"
+            except visa.VisaIOWarning:
+               myprint("VisaError:  VisaIOWarning")
+            except OSError: # not of visa but OS
+               myprint("OS error, maybe library not found?")
             except:
-                myprint("Unexpected error:", sys.exc_info()[0])
-                myprint("maybe resource busy, i.e. increase query_delay or unplug-replug")
+               myprint("VisaError:  Unexpected error:", sys.exc_info()[0])
+               myprint("maybe resource busy, i.e. increase query_delay or unplug-replug")
 
 
 def getinstrument(name,qdelay=0): #name segment as input

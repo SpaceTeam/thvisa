@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created 2017/2018
+Created 2018
 
 @author: thirschbuechler
 """
