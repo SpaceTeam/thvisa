@@ -1,0 +1,4 @@
+#Oszi Keysight dsox1102g
+SUBSYSTEM=="usb", ATTR{idVendor}=="2a8d", ATTR{idProduct}=="1797", MODE="0666", GROUP="thomas"
+#PSU rspro rspd3303c
+SUBSYSTEM=="usb", ATTR{idVendor}=="0483", ATTR{idProduct}=="7540", MODE="0666", GROUP="thomas"
