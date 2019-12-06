@@ -6,7 +6,6 @@ Created on Sat Nov 16 16:54:04 2019
 @author: thirschbuechler
 """
 
-
 import pyvisa as visa
 
 import math #nan-strings
@@ -88,9 +87,7 @@ def psu_set(PSU_visa,
     return error_flag
 
 
-
-### module test ###
-if __name__ == '__main__': # test if called as executable, not as library
+def baretest():
     #rm = visa.ResourceManager()
     #rm.close()# doesn't help on busy ressource
     
@@ -115,3 +112,7 @@ if __name__ == '__main__': # test if called as executable, not as library
     
     visa_PSU.close()
     del visa_PSU
+
+### module test ###
+if __name__ == '__main__': # test if called as executable, not as library
+    baretest()

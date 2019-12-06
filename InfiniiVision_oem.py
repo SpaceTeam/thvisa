@@ -7,14 +7,12 @@ Created on Sat Nov 16 19:47:52 2019
 """
 
 # ToDo:
+# replace do_command with obj. oriented call
 # regex replace 3 capital letter words with lowercase (better readability)
-import time #waits
-import string #keysight wants them
-import struct #keysight wants them
-import sys #keysight wants them
+
+import struct
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 import thvisa
 
@@ -22,96 +20,6 @@ import thvisa
 # global variables
 debug = 1
 
-def visa_write_delayed(visa,msg,wait_time_ms = 100):
-    err_flag = visa.write(msg)
-    time.sleep(wait_time_ms/1000)
-    return err_flag
-
-
-    
-# =========================================================
-# Send a command and check for errors:
-# =========================================================
-def do_command(command, hide_params=False):
-    global instr
-    
-    if hide_params: 
-        (header, data) = string.split(command, " ", 1)
-        if debug: print("\nCmd = '%s'" % header)
-    else:
-        if debug: print("\nCmd = '%s'" % command)
-            
-    instr.write("%s" % command)
-    
-    if hide_params:
-        check_instrument_errors(header)
-    else:
-        check_instrument_errors(command)
-    
-# =========================================================
-# Send a command and binary values and check for errors:
-# =========================================================
-def do_command_ieee_block(command, values):
-    global instr
-    
-    if debug:
-        print("Cmb = '%s'" % command)
-    instr.write_binary_values("%s " % command, values, datatype='c')
-    check_instrument_errors(command)
-    
-# =========================================================
-# Send a query, check for errors, return string:
-# =========================================================
-def do_query_string(query):
-    global instr
-    
-    if debug: print("Qys = '%s'" % query)
-
-    result = instr.query("%s" % query)
-    check_instrument_errors(query)
-    return result
-
-# =========================================================
-# Send a query, check for errors, return floating-point value:
-# =========================================================
-def do_query_number(query):
-    global instr
-    
-    if debug: print("Qyn = '%s'" % query)
-    results = instr.query("%s" % query)
-    check_instrument_errors(query)
-    return float(results)
-
-# =========================================================
-# Send a query, check for errors, return binary values:
-# =========================================================
-def do_query_ieee_block(query):
-    global instr
-    
-    if debug: print("Qys = '%s'" % query)
-    result = instr.query_binary_values("%s" % query, datatype='s')
-    check_instrument_errors(query)
-    return result[0]
-
-# =========================================================
-# Check for instrument errors:
-# =========================================================
-def check_instrument_errors(command):
-    global  instr
-    
-    while True:
-        error_string = instr.query(":SYSTem:ERRor?")
-        if error_string: # If there is an error string value.
-            if error_string.find("+0,", 0, 3) == -1: # Not "No error".
-                print("ERROR: %s, command: '%s'" % (error_string, command))
-                print("Exited because of error.")
-                sys.exit(1)
-            else: # "No error"
-                break
-        else: # :SYSTem:ERRor? should always return string.
-            print("ERROR: :SYSTem:ERRor? returned nothing, command: '%s'" % command)
-            print("Exited because of error.")
-            sys.exit(1)
 
 
 def osc_wgen_setup():
@@ -128,6 +36,7 @@ def osc_wgen_output(out_enable):
     else:
         do_command(":WGEN:OUTPut OFF")
     
+    
 # =========================================================
 # Initialize:
 # =========================================================
@@ -138,6 +47,7 @@ def initialize():
     # Clear status and load the default setup.
     do_command("*CLS")
     do_command("*RST")
+
 
 def setupTestcase():
     # Set trigger mode.
@@ -170,12 +80,11 @@ def setupTestcase():
     do_command(":TIMebase:POSition 0.0")
  
     do_command(":MEASure:SOURce CHANnel1")
+
+
 # =========================================================
 # Capture:
 # =========================================================
-
-    
-    
 def capture():
     
     # Use auto-scale to automatically set up oscilloscope.
@@ -216,6 +125,7 @@ def capture():
     # make an acquisition using :DIGitize of just one channel
     #do_command(":DIGitize CHANnel1")
     do_command(":digitize")
+    
     
 # =========================================================
 # Analyze:
