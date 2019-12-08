@@ -6,8 +6,8 @@ Created on Fri Dec  6 21:37:06 2019
 @author: thomas
 """
 
-
 import thvisa as thv
 
-class InfiniiVision(thv.thInstr):
+class spd3303c(thv.thInstr):
     pass
+

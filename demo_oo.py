@@ -4,6 +4,7 @@
 Created on Fri Dec  6 19:55:26 2019
 
 @author: https://realpython.com/python3-object-oriented-programming/
+mostly
 """
 
 # Parent class
@@ -29,13 +30,13 @@ class Dog:
 # Child class (inherits from Dog class)
 class RussellTerrier(Dog):
     def run(self, speed):
-        return "{} runs {}".format(self.name, speed)
+        return "{} runs very {}".format(self.name, speed)
 
 
 # Child class (inherits from Dog class)
 class Bulldog(Dog):
     def run(self, speed):
-        return "{} runs {}".format(self.name, speed)
+        return "{} runs kinda {}".format(self.name, speed)
 
 
 # Child classes inherit attributes and
@@ -46,3 +47,9 @@ print(jim.description())
 # Child classes have specific attributes
 # and behaviors as well
 print(jim.run("slowly"))
+
+
+jim = Bulldog("Jim", 5)
+print(jim.description())
+print(jim.run("fast"))
+print(jim.speak("hello"))
