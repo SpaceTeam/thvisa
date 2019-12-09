@@ -31,6 +31,7 @@ class thInstr:
 
     # Initializer / Instance Attributes
     def __init__(self, instrname=0, qdelay=0, myprint = printdummy):
+
         self.myprint=myprint
         self.myinstruments = []
         self.rm = visa.ResourceManager()
@@ -112,6 +113,7 @@ class thInstr:
 
 
     def visa_write_delayed(self, visa,msg,wait_time_ms = 100):
+
         err_flag = visa.write(msg)
         time.sleep(wait_time_ms/1000)
         return err_flag
@@ -121,7 +123,6 @@ class thInstr:
     # Send a command and check for errors:
     # =========================================================
     def do_command(self, command, hide_params=False):
-
 
         if hide_params:
             (header, data) = string.split(command, " ", 1)
@@ -141,7 +142,6 @@ class thInstr:
     # Send a command and binary values and check for errors:
     # =========================================================
     def do_command_ieee_block(self, command, values):
-
 
         self.myprint("Cmb = '%s'" % command)
         self.instr.write_binary_values("%s " % command, values, datatype='c')
@@ -185,22 +185,25 @@ class thInstr:
     # Check for instrument errors:
     # =========================================================
     def check_instrument_errors(self, command):
-        global  instr
 
         while True:
             error_string = self.instr.query(":SYSTem:ERRor?")
             if error_string: # If there is an error string value.
                 if error_string.find("+0,", 0, 3) == -1: # Not "No error".
                    self.myprint("ERROR: %s, command: '%s'" % (error_string, command))
-                   self.myprint("Exited because of error.")
+                   self.myprint("Exing due to error.")
                     sys.exit(1)
                 else: # "No error"
                     break
             else: # :SYSTem:ERRor? should always return string.
                self.myprint("ERROR: :SYSTem:ERRor? returned nothing, command: '%s'" % command)
-               self.myprint("Exited because of error.")
+               self.myprint("Exiting due to error.")
                 sys.exit(1)
 
+    __del__():
+        #self.instr.close() # shut down # gets called by __del__ of rm
+        # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
+        del self.instr
 
 
 ### module test ###
