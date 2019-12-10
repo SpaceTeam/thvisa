@@ -5,6 +5,7 @@ Created on Fri Dec  6 21:35:30 2019
 
 @author: thomas
 """
+import time
 import struct
 import numpy as np
 import thvisa as thv
@@ -66,7 +67,7 @@ class InfiniiVision(thv.thInstr):
         f = open(filename, "wb")
         f.write(sDisplay)
         f.close()
-       self.myprint("Screen image written to {}.".format(filename))
+        self.myprint("Screen image written to {}.".format(filename))
 
 
     def store_setup(self):
@@ -74,7 +75,7 @@ class InfiniiVision(thv.thInstr):
         f = open("setup.stp", "wb")
         f.write(sSetup)
         f.close()
-       self.myprint("Setup bytes saved: %d" % len(sSetup))
+        self.myprint("Setup bytes saved: %d" % len(sSetup))
 
 
     def load_setup(self):
@@ -83,7 +84,7 @@ class InfiniiVision(thv.thInstr):
         sSetup = f.read()
         f.close()
         instr.do_command_ieee_block(":SYSTem:SETup", sSetup)
-       self.myprint("Setup bytes restored: %d" % len(sSetup))
+        self.myprint("Setup bytes restored: %d" % len(sSetup))
 
 
     def capture(self,type="normal"): #normal,highres, ..
@@ -101,7 +102,7 @@ class InfiniiVision(thv.thInstr):
         return qresult
 
     def data_dl(self, channel=1):
-       self.myprint("### getting channel "+str(channel)+" ###")
+        self.myprint("### getting channel "+str(channel)+" ###")
 
         self.do_command(":WAVeform:POINts:MODE RAW")
         # Get the number of waveform points available.
@@ -131,16 +132,16 @@ class InfiniiVision(thv.thInstr):
     #    ) = string.split(preamble_string, ",")
         ) = preamble_string.split(",")
 
-       self.myprint("Waveform format: %s" % wav_form_dict[int(wav_form)])
-       self.myprint("Acquire type: %s" % acq_type_dict[int(acq_type)])
-       self.myprint("Waveform points desired: %s" % wfmpts)
-       self.myprint("Waveform average count: %s" % avgcnt)
-       self.myprint("Waveform X increment: %s" % x_increment)
-       self.myprint("Waveform X origin: %s" % x_origin)
-       self.myprint("Waveform X reference: %s" % x_reference) # Always 0.
-       self.myprint("Waveform Y increment: %s" % y_increment)
-       self.myprint("Waveform Y origin: %s" % y_origin)
-       self.myprint("Waveform Y reference: %s" % y_reference)
+        self.myprint("Waveform format: %s" % wav_form_dict[int(wav_form)])
+        self.myprint("Acquire type: %s" % acq_type_dict[int(acq_type)])
+        self.myprint("Waveform points desired: %s" % wfmpts)
+        self.myprint("Waveform average count: %s" % avgcnt)
+        self.myprint("Waveform X increment: %s" % x_increment)
+        self.myprint("Waveform X origin: %s" % x_origin)
+        self.myprint("Waveform X reference: %s" % x_reference) # Always 0.
+        self.myprint("Waveform Y increment: %s" % y_increment)
+        self.myprint("Waveform Y origin: %s" % y_origin)
+        self.myprint("Waveform Y reference: %s" % y_reference)
 
         # Get numeric values for later calculations.
         x_increment = self.do_query_number(":WAVeform:XINCrement?")
@@ -154,7 +155,7 @@ class InfiniiVision(thv.thInstr):
 
         # Unpack unsigned byte data.
         values = struct.unpack("%dB" % len(sData), sData)
-       self.myprint("Number of data values: %d" % len(values))
+        self.myprint("Number of data values: %d" % len(values))
 
         # make data vectors
         times=  + np.arange(x_origin,x_origin+len(values)*x_increment,x_increment)

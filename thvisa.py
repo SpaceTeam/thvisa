@@ -34,9 +34,13 @@ class thInstr:
 
         self.myprint=myprint
         self.myinstruments = []
-        self.rm = visa.ResourceManager()
-        instruments = np.array(self.rm.list_resources())
-
+        self.instr = 0
+        try:
+            self.rm = visa.ResourceManager()
+            instruments = np.array(self.rm.list_resources())
+        except OSError: # not of visa but OS
+           self.myprint("OS error, maybe restart PC/RPI or library not found?")
+           sys.exit(0)
 
         # this only works sometimes.. pyvisa.. catch general exception
         # for some reason, it's lucky to query the keysight oszi first...
@@ -58,8 +62,7 @@ class thInstr:
                         # "with"context cleans class up after use / when dying
                         # better than deconstructor: https://eli.thegreenplace.net/2009/06/12/safely-using-destructors-in-python/
                         identity = my_instrument.query('*IDN?')
-                        self.myprint("Resource: '" + instrument + "' is")
-                        self.myprint(identity + '\n')
+                        self.myprint("Resource: '" + instrument + "' is" + identity + '\n')
                         self.myinstruments.append(instrument)
 
                         self.myprint("cleanup after idn")
@@ -87,8 +90,8 @@ class thInstr:
         if instrname:
             self.instr=(self.getinstrument(instrname, qdelay=qdelay))
         else:
-            myprint("sad puppy, no instr")#$do something?
-            return(0)
+            self.myprint("you made no wish, you you aren't gettin' any!")#$do something?
+            #return(0)
 
     # end __init__
 
@@ -99,7 +102,8 @@ class thInstr:
                 return(self.rm.open_resource(instrument, query_delay=qdelay)) #exits on first find
 
         #else, this happens:
-        return(0)
+        self.myprint("oh noes, requested instrument not found!")#$do something?
+        sys.exit(0)
 
 
     # depreciated: do commands as class functions, not externally
@@ -189,25 +193,38 @@ class thInstr:
         while True:
             error_string = self.instr.query(":SYSTem:ERRor?")
             if error_string: # If there is an error string value.
-                if error_string.find("+0,", 0, 3) == -1: # Not "No error".
+                error_string = error_string.strip("ERROR: ") # remove that
+                if error_string.find("0", 0, 1) == -1: # Not "ERROR: 0  No Error"
                    self.myprint("ERROR: %s, command: '%s'" % (error_string, command))
                    self.myprint("Exing due to error.")
-                    sys.exit(1)
+                   self.myprint("i can see my house form here")
+                   sys.exit(1)
                 else: # "No error"
                     break
             else: # :SYSTem:ERRor? should always return string.
                self.myprint("ERROR: :SYSTem:ERRor? returned nothing, command: '%s'" % command)
                self.myprint("Exiting due to error.")
-                sys.exit(1)
-
-    __del__():
+               sys.exit(1)
+    
+    def __del__(self):
         #self.instr.close() # shut down # gets called by __del__ of rm
         # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
-        del self.instr
+        if (self.instr):
+            self.instr.close()
+            self.myprint("say goodbye, instrument!")
 
+    
+    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
+        self.__del__() # kill, kill!
+        return True
+    
+    
+    def __enter__(self):# Qwith" context entered: do nothing other than init
+        #self.__init__() # come to life
+        return True
 
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
-    myinstr = thInstr()
+    myinstr = thInstr(myprint=print)
 
     #todo: test all functions, or specify to run other module which does.. really!!
