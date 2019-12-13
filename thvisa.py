@@ -206,6 +206,7 @@ class thInstr:
                self.myprint("Exiting due to error.")
                sys.exit(1)
     
+    
     def __del__(self):
         #self.instr.close() # shut down # gets called by __del__ of rm
         # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
@@ -216,12 +217,14 @@ class thInstr:
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.__del__() # kill, kill!
-        return True
+        #return True
     
     
     def __enter__(self):# Qwith" context entered: do nothing other than init
         #self.__init__() # come to life
-        return True
+        #return True
+        return self
+
 
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
