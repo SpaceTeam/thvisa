@@ -20,7 +20,7 @@ def printdummy(*args):
     pass
 
 
-class thInstr:
+class thInstr(object):
     # Python3 object orientation:
     # first parameter "object" for inheritence can be ignored
     # the "self" parameter of subfunctions can't be ingored internally, only externally
@@ -29,8 +29,12 @@ class thInstr:
     # i.e. instance = myclass(), then myclass.fct(parameter1, parameter2, ..)
     # , param0=self=omitted
 
+    # default attributes for child-classes
+    myprintdef = printdummy
+    instrnamedef = 0
+    qdelaydef = 0
     # Initializer / Instance Attributes
-    def __init__(self, instrname=0, qdelay=0, myprint = printdummy):
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
 
         self.myprint=myprint
         self.myinstruments = []

@@ -11,6 +11,11 @@ import thvisa as thv
 
 class spd3303c(thv.thInstr):
 
+    # overwrite class inherited defaults
+    myprintdef = print
+    instrnamedef = "NPD"
+    qdelaydef = 1
+    
     def set_settletime(self,newsettletime):
             self.settletime = newsettletime
 
@@ -76,7 +81,7 @@ class spd3303c(thv.thInstr):
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
     #psu = spd3303c("NPD",qdelay=1,myprint=print)
-    with spd3303c("NPD",qdelay=1,myprint=print) as psu:
+    with spd3303c() as psu:
         print("hello")
         psu.set_settletime(1)
         psu.set(False,False)

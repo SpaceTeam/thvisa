@@ -5,20 +5,27 @@ Created on Fri Dec  6 21:35:30 2019
 
 @author: thomas
 """
-import time
+#import time
 import struct
 import numpy as np
 import thvisa as thv
-
+import matplotlib.pyplot as plt
 
 class InfiniiVision(thv.thInstr):
 # code guidelines: default setup has to measure testsignal with default probe
 
-    def initialize(self):
-        # Get and display the device's *IDN? string.
-        instr.timeout = 15000 # https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout
-        idn_string = self.do_query_string("*IDN?")
-        self.myprint("Identification string: '%s'" % idn_string)
+    # overwrite class inherited defaults
+    myprintdef = print
+    instrnamedef = "CN5727"
+    qdelaydef = 0.5
+    
+    def __init__(self, *args, **kwargs):
+        self.timeout = 15000 # https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout
+        super(InfiniiVision, self).__init__() # call parent init # does this call the new class defaults as well?
+        self.reset()
+        
+
+    def reset(self):
         # Clear status and load the default setup.
         self.do_command("*CLS")
         self.do_command("*RST")
@@ -38,7 +45,7 @@ class InfiniiVision(thv.thInstr):
             self.do_command(":WGEN:OUTPut OFF")
 
 
-    def setup_trigger_edge(ch=1,level=1.5,slope="positive"):
+    def setup_trigger_edge(self,ch=1,level=1.5,slope="positive"):
         self.do_command(":TRIGger:MODE EDGE")
         self.do_command(":TRIGger:EDGE:SOURce CHANnel{}".format(ch))
         self.do_command(":TRIGger:EDGE:LEVel {}".format(level)) # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
@@ -50,10 +57,10 @@ class InfiniiVision(thv.thInstr):
         self.do_command(":TIMebase:POSition 0.0") # leave the offset close to the trigger!
 
 
-    def setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0):
-        osc.do_command(":CHANnel{}:PROBe {}".format(ch,probe))
-        osc.do_command(":CHANnel{}:SCALe {}".format(ch,scale))
-        osc.do_command(":CHANnel{}:OFFSet {}".format(ch,offset))
+    def setup_channel(self,ch=1,scale=0.5,offset=1.5,probe=10.0):
+        self.do_command(":CHANnel{}:PROBe {}".format(ch,probe))
+        self.do_command(":CHANnel{}:SCALe {}".format(ch,scale))
+        self.do_command(":CHANnel{}:OFFSet {}".format(ch,offset))
 
 
     def screenie(self,filename="screen_image.png"):
@@ -83,25 +90,25 @@ class InfiniiVision(thv.thInstr):
         f = open("setup.stp", "rb")
         sSetup = f.read()
         f.close()
-        instr.do_command_ieee_block(":SYSTem:SETup", sSetup)
+        self.do_command_ieee_block(":SYSTem:SETup", sSetup)
         self.myprint("Setup bytes restored: %d" % len(sSetup))
 
 
-    def capture(self,type="normal"): #normal,highres, ..
-        osc.do_command(":ACQuire:TYPE {}".format(type))
-        osc.do_command(":digitize") # digitize all channels: now it's stored in the oszi
+    def capture(self,type="normal"): #normal,highres, .. #$$ shouldnt this happen before triggering!!??
+        self.do_command(":ACQuire:TYPE {}".format(type))
+        self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
 
 
     def autoscale(self):
-        myprint("Autoscale. this usually is bad practice, but you asked for it..")
-        osc.do_command(":AUToscale")
+        self.myprint("Autoscale. this usually is bad practice, but you asked for it..")
+        self.do_command(":AUToscale")
 
 
     def analyzetest(self): # todo: mooooaaar measurements!!!
         qresult = self.do_query_string(":MEASure:VAMPlitude?")
         return qresult
 
-    def data_dl(self, channel=1):
+    def data_dl(self, channel):
         self.myprint("### getting channel "+str(channel)+" ###")
 
         self.do_command(":WAVeform:POINts:MODE RAW")
@@ -129,7 +136,6 @@ class InfiniiVision(thv.thInstr):
         (
             wav_form, acq_type, wfmpts, avgcnt, x_increment, x_origin,
             x_reference, y_increment, y_origin, y_reference
-    #    ) = string.split(preamble_string, ",")
         ) = preamble_string.split(",")
 
         self.myprint("Waveform format: %s" % wav_form_dict[int(wav_form)])
@@ -164,11 +170,40 @@ class InfiniiVision(thv.thInstr):
         return(times,voltages)
 
 
+#no class fct, just to "UNITTEST"
+def myplot_bare(osc, ch):
+    [times, voltages] = osc.data_dl(ch)
+    plt.figure()
+    plt.xticks(rotation=90)
+    plt.xlabel("s")
+    plt.ylabel("V")
+    plt.plot(times,voltages)
+    plt.show()
 
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
-    oszi = InfiniiVision()
-    oszi.initialize()
+    with InfiniiVision() as osc:        
+        #todo: insert code to measure test signal
+        #todo: test all functions
 
-    #todo: insert code to measure test signal
-    #todo: test all functions
+        osc.setup_trigger_edge(ch=1,level=1.5,slope="positive")
+        # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
+        osc.setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0)
+        osc.setup_channel(ch=2,scale=10,offset=0,probe=1.0) # probe is coax, actually
+    
+        # setup wgen
+        osc.wgen_setup(fct="sinusoid",freq="2E3",VL=3.0,VH=0.0) # setup test signal
+        osc.wgen_output(True)
+    
+        #osc.autoscale()
+    
+        # set horizontal scale
+        osc.setup_timebase(scale=0.0002, pos=0.0)
+    
+        # aquire data with trigger type normal
+        osc.capture(type="normal")
+    
+        # get and plot
+        myplot_bare(osc,2)
+        myplot_bare(osc,1)
+        
