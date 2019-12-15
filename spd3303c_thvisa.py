@@ -16,6 +16,13 @@ class spd3303c(thv.thInstr):
     instrnamedef = "NPD"
     qdelaydef = 1
     
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
+        self.qdelay=qdelay
+        self.myprint=myprint
+        self.instrname=instrname
+        super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay) # call parent init 
+        
+        
     def set_settletime(self,newsettletime):
             self.settletime = newsettletime
 

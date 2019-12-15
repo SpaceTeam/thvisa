@@ -39,6 +39,9 @@ class thInstr(object):
         self.myprint=myprint
         self.myinstruments = []
         self.instr = 0
+        self.instrname = instrname
+        
+        self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
             self.rm = visa.ResourceManager()
             instruments = np.array(self.rm.list_resources())
@@ -69,8 +72,7 @@ class thInstr(object):
                         self.myprint("Resource: '" + instrument + "' is" + identity + '\n')
                         self.myinstruments.append(instrument)
 
-                        self.myprint("cleanup after idn")
-
+                    #self.myprint("cleanup after idn")
                     #my_instrument.close() # shut down # gets called by __del__ of rm
                     # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
                     #del my_instrument
@@ -86,13 +88,14 @@ class thInstr(object):
                    self.myprint("OS error, maybe library not found?")
                 except:
                    self.myprint("VisaError:  Unexpected error:", sys.exc_info()[0])
-                   self.myprint("maybe resource busy, i.e. increase query_delay or unplug-replug")
+                   self.myprint("maybe resource busy , i.e. increase query_delay or unplug-replug"+"\n"+"or already taken by other/older session, if you didn't use a \"with\"-context")
 
 
         # intendation level: __init__
         # now, if name specified, return thing
-        if instrname:
+        if self.instrname:
             self.instr=(self.getinstrument(instrname, qdelay=qdelay))
+            self.instrname=instrname
         else:
             self.myprint("you made no wish, you you aren't gettin' any!")#$do something?
             #return(0)
@@ -198,6 +201,7 @@ class thInstr(object):
             error_string = self.instr.query(":SYSTem:ERRor?")
             if error_string: # If there is an error string value.
                 error_string = error_string.strip("ERROR: ") # remove that
+                error_string = error_string.strip("+") # remove that
                 if error_string.find("0", 0, 1) == -1: # Not "ERROR: 0  No Error"
                    self.myprint("ERROR: %s, command: '%s'" % (error_string, command))
                    self.myprint("Exing due to error.")
@@ -216,7 +220,7 @@ class thInstr(object):
         # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
         if (self.instr):
             self.instr.close()
-            self.myprint("say goodbye, instrument!")
+            self.myprint("say goodbye, instrument {}!".format(self.instrname))
 
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del

@@ -31,7 +31,7 @@ def myplot(osc, ch):
 
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
-    with [oscc.InfiniiVision(),psuc.spd3303c()] as [osc,psu]:        
+    with oscc.InfiniiVision() as osc,  psuc.spd3303c() as psu:        
         #todo: insert code to measure test signal
         #todo: test all functions
 
@@ -43,10 +43,12 @@ if __name__ == '__main__': # test if called as executable, not as library
         osc.setup_trigger_edge(ch=1,level=1.5,slope="positive")
         # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
         osc.setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0)
-        osc.setup_channel(ch=2,scale=10,offset=0,probe=1.0) # probe is coax, actually
+        #osc.setup_channel(ch=2,scale=10,offset=0,probe=1.0) # probe is yellow coax
+        osc.setup_channel(ch=2,scale=1,offset=0,probe=10.0) 
+
     
         # setup wgen
-        osc.wgen_setup(fct="sinusoid",freq="2E3",VL=3.0,VH=0.0) # setup test signal
+        osc.wgen_setup(fct="sinusoid",freq="2E3",VL=0.0,VH=3.0) # setup test signal
         osc.wgen_output(True)
     
         #osc.autoscale()
