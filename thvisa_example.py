@@ -29,7 +29,7 @@ def myplot(osc, ch):
 
 
 
-### module test ###
+### MAIN ###
 if __name__ == '__main__': # test if called as executable, not as library
     with oscc.InfiniiVision() as osc,  psuc.spd3303c() as psu:        
         #todo: insert code to measure test signal
