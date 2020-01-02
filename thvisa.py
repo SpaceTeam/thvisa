@@ -204,8 +204,8 @@ class thInstr(object):
                 error_string = error_string.strip("+") # remove that
                 if error_string.find("0", 0, 1) == -1: # Not "ERROR: 0  No Error"
                    self.myprint("ERROR: %s, command: '%s'" % (error_string, command))
-                   self.myprint("Exing due to error.")
-                   self.myprint("i can see my house form here")
+                   self.myprint("Exiting on error.")
+                   self.myprint("i can see my house from up here")
                    sys.exit(1)
                 else: # "No error"
                     break

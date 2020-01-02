@@ -46,13 +46,19 @@ class InfiniiVision(thv.thInstr):
             4 : "ASCii",
         }
         
+    def __del__(self):
+        if self.instr: # del may be called twice, so gate the call that it may not be called on an empty instr
+            self.do_command(":System:Lock 0") # unlock user input in case it was locked
+        super(InfiniiVision, self).__init__() 
+        
+
 
     # reset the instrument to the known default setup #
     def reset(self):
         self.do_command("*CLS")
         self.do_command("*RST")
-        # $$ are we in stop now?
-        # $$ lock oszi as well!?
+        self.do_command(":STOP") # stop aquisition
+        self.do_command(":System:Lock 1") # lock user input whilst instructing instrument
 
 
     # setup the function generator aka wave generator #
@@ -126,7 +132,7 @@ class InfiniiVision(thv.thInstr):
 
 
     # enable trigger and get data #
-    #$$assuming osci is in stop mode.. is it after reset and test sequence commands!?
+    # assuming osci is in stop mode.. is  after reset
     def capture(self,aqtype="normal", trigtype="single"): 
         
         self.do_command(":ACQuire:TYPE {}".format(aqtype)) 
@@ -138,9 +144,11 @@ class InfiniiVision(thv.thInstr):
             self.do_command(":Trigger:Sweep Auto") # use if capture asap needed, no sync to some edge wanted, or when measureing DC only, i.e. using osci as DMM!!
             self.do_command(":RUN")
         else:
-            self.do_command(":Single") # runs alone, once!
+            self.do_command(":Single") # run alone, once! yes, run is implied
         
-        #$todo: timeout and force via .. if no signal, as default option
+        #$todo: timeout acc. to 1-5 periods and force via .. if no signal, as default option
+        #$a capture timeout is nasty and will kill the session and lock the frontpanel! yes, the :system:lock was turned off for this test!
+        #$maybe increase instr.timeout temporarily if necessary
         #self.do_command(":Trigger:Force")
                 
         self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
@@ -233,7 +241,7 @@ def test_data_wavegen_DMM():
         # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
         osc.setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0)
         #osc.setup_channel(ch=2,scale=10,offset=0,probe=1.0) # probe is yellow coax
-        osc.setup_channel(ch=2,scale=1,offset=0,probe=10.0) 
+        #osc.setup_channel(ch=2,scale=1,offset=0,probe=10.0) 
     
         # setup wgen
         osc.wgen_setup(fct="sinusoid",freq="2E3",VL=0.0,VH=3.0) # setup test signal
@@ -249,7 +257,7 @@ def test_data_wavegen_DMM():
         # Dmm_results()
         
         # get and plot
-        myplot_bare(osc,2)
+        #myplot_bare(osc,2)
         myplot_bare(osc,1)
         
         
