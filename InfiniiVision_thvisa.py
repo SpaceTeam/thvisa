@@ -224,6 +224,9 @@ class InfiniiVision(thv.thInstr):
 ### shall only performed manually by someone who understands oszi inner workings ###
 
 # plot helper #
+# $todo: maybe own library to check whether gui (xserver) is running or only ssh,
+# $todo: output to pdf with pdf-helper
+
 def myplot_bare(osc, ch):
     [times, voltages] = osc.data_dl(ch)
     plt.figure()

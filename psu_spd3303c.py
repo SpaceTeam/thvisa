@@ -116,4 +116,4 @@ def baretest():
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
     baretest()
-    osc=InfiniiVision_thvisa("CN5727",qdelay=0.5,myprint=print)
+    # todo: thvisa integrated test
