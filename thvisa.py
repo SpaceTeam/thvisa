@@ -32,7 +32,7 @@ class thInstr(object):
     # default attributes for child-classes
     myprintdef = printdummy
     instrnamedef = 0
-    qdelaydef = 0
+    qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
     # Initializer / Instance Attributes
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
 
@@ -40,13 +40,14 @@ class thInstr(object):
         self.myinstruments = []
         self.instr = 0
         self.instrname = instrname
+        self.qdelay = qdelay
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
             self.rm = visa.ResourceManager()
             instruments = np.array(self.rm.list_resources())
         except OSError: # not of visa but OS
-           self.myprint("OS error, maybe restart PC/RPI or library not found?")
+           self.myprint("OS error, maybe restart python script host, or library not found?")
            sys.exit(0)
 
         # this only works sometimes.. pyvisa.. catch general exception
@@ -60,16 +61,11 @@ class thInstr(object):
             for instrument in instruments:
                 self.myprint(instrument)
                 try:
-                    delay=0.5
-                    # toDo: don't hardcode here
-                    if "NPD" in instrument: #spd3303c needs delay at init
-                        delay=1
-
-                    with self.rm.open_resource(instrument, query_delay = delay) as my_instrument:
+                    with self.rm.open_resource(instrument, query_delay = self.qdelay) as my_instrument:
                         # "with"context cleans class up after use / when dying
                         # better than deconstructor: https://eli.thegreenplace.net/2009/06/12/safely-using-destructors-in-python/
                         identity = my_instrument.query('*IDN?')
-                        self.myprint("Resource: '" + instrument + "' is" + identity + '\n')
+                        self.myprint("Resource: '" + instrument + " is " + identity + '\n')
                         self.myinstruments.append(instrument)
 
                     #self.myprint("cleanup after idn")
@@ -85,7 +81,7 @@ class thInstr(object):
                 except visa.VisaIOWarning:
                    self.myprint("VisaError:  VisaIOWarning")
                 except OSError: # not of visa but OS
-                   self.myprint("OS error, maybe library not found?")
+                    self.myprint("OS error, maybe restart python script host, or library not found?")
                 except:
                    self.myprint("VisaError:  Unexpected error:", sys.exc_info()[0])
                    self.myprint("maybe resource busy , i.e. increase query_delay or unplug-replug"+"\n"+"or already taken by other/older session, if you didn't use a \"with\"-context")
@@ -97,12 +93,12 @@ class thInstr(object):
             self.instr=(self.getinstrument(instrname, qdelay=qdelay))
             self.instrname=instrname
         else:
-            self.myprint("you made no wish, you you aren't gettin' any!")#$do something?
+            self.myprint("you made no wish, so you aren't gettin' any!")#$do something?
             #return(0)
 
     # end __init__
 
-    def getinstrument(self, name,qdelay=0): #name segment as input
+    def getinstrument(self, name,qdelay=0): #name segment as input #$todo: inline if no other use 
 
         for instrument in self.myinstruments:
             if name in instrument:

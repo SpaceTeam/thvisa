@@ -20,7 +20,10 @@ class spd3303c(thv.thInstr):
         self.qdelay=qdelay
         self.myprint=myprint
         self.instrname=instrname
-        super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay) # call parent init 
+        
+        # call parent init #
+        # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
+        super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay)
         
         
     def set_settletime(self,newsettletime):

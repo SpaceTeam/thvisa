@@ -5,9 +5,9 @@ Created on Fri Dec  6 21:35:30 2019
 
 @author: thomas
 """
-#import time
 import struct
 import numpy as np
+import ucmd_helper as ucmd
 import thvisa as thv
 import matplotlib.pyplot as plt
 
@@ -46,11 +46,16 @@ class InfiniiVision(thv.thInstr):
             4 : "ASCii",
         }
         
-    def __del__(self):
+   # def __del__(self):
+    #    super(InfiniiVision, self).__del__() 
+    # since no commands extra to pass no need to make a child fct which calls inherited fct
+        
+    
+    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         if self.instr: # del may be called twice, so gate the call that it may not be called on an empty instr
             self.do_command(":System:Lock 0") # unlock user input in case it was locked
-        super(InfiniiVision, self).__init__() 
-        
+        super(InfiniiVision, self).__exit__( exc_type, exc_value, tb) # not indented under "if"!
+
 
 
     # reset the instrument to the known default setup #
@@ -161,6 +166,7 @@ class InfiniiVision(thv.thInstr):
 
 
     # some DMM like single-valued readouts without graphs #
+    # $todo: which channel does it readout?
     def DMM_results(self, msr="Vamp"): # $todo: mooooaaar measurements!!!
         #$todo if-else or switch-case
         qresult = self.do_query_string(":MEASure:VAMPlitude?")
@@ -234,17 +240,31 @@ def myplot_bare(osc, ch):
     plt.xlabel("s")
     plt.ylabel("V")
     plt.plot(times,voltages)
+    plt.title("Channel {}".format(ch))
     plt.show()
 
 
 def test_data_wavegen_DMM():
-    # setup hardware to measure testsignal and wavegen #
+    ## test setup ##
+    # user input #
+    print("please connet CH1 to probe test signal, with x10 probe setting")
+    stuff=ucmd.askandreturn("is CH2 connected to anything?")
+    if stuff=="yes":
+        atten=ucmd.askandreturn("probe x10 or coax, i.e. x1?",["1","10"]) # attenuation
+        CH2=True
+    else:
+        CH2=False
+    
+    # setup oszi to measure testsignal and wavegen #
     with InfiniiVision() as osc:        
+        
         osc.setup_trigger_edge(ch=1,level=1.5,slope="positive")
         # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
+        
+        
         osc.setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0)
-        #osc.setup_channel(ch=2,scale=10,offset=0,probe=1.0) # probe is yellow coax
-        #osc.setup_channel(ch=2,scale=1,offset=0,probe=10.0) 
+        if CH2:
+            osc.setup_channel(ch=2,scale=1,offset=0,probe=atten) 
     
         # setup wgen
         osc.wgen_setup(fct="sinusoid",freq="2E3",VL=0.0,VH=3.0) # setup test signal
@@ -257,12 +277,12 @@ def test_data_wavegen_DMM():
         osc.capture(aqtype="normal", trigtype="normal")
     
         # also do DMM_results_testing on channel of wavegen
-        # Dmm_results()
+        # Dmm_results() # $todo
         
         # get and plot
-        #myplot_bare(osc,2)
         myplot_bare(osc,1)
-        
+        if CH2:
+            myplot_bare(osc,2)
         
 # todo: implement #
 def test_saveandload():
@@ -279,6 +299,7 @@ def test_autoscale():
 
 #### test this library using semu Unit Testing ####
 if __name__ == '__main__': # test if called as executable, not as library
+    plt.close("all")
     test_data_wavegen_DMM()
     test_saveandload()
     test_autoscale()
