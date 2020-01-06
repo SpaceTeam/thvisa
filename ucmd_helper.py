@@ -5,6 +5,9 @@ Created on Mon Jan  6 16:55:24 2020
 
 @author: thomas
 """
+## Important Note ##
+# the "input"-function prevents exception throw
+# found out by using the eggclock-helper
 
 def askandreturn(question="Question", validresults=["yes","no"]):
     while 1:
