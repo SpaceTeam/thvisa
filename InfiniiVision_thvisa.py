@@ -57,7 +57,6 @@ class InfiniiVision(thv.thInstr):
         super(InfiniiVision, self).__exit__( exc_type, exc_value, tb) # not indented under "if"!
 
 
-
     # reset the instrument to the known default setup #
     def reset(self):
         self.do_command("*CLS")
@@ -97,10 +96,12 @@ class InfiniiVision(thv.thInstr):
 
 
     # setup the channel #
-    def setup_channel(self,ch=1,scale=0.5,offset=1.5,probe=10.0):
+    def setup_channel(self,ch=1,scale=0.5,offset=1.5,probe=10.0, coupling="dc"):
         self.do_command(":CHANnel{}:PROBe {}".format(ch,probe))
+        self.do_command(":channel1:coupling {}".format(coupling)) # $changing the order of these commands may kill the instr. .. still?
         self.do_command(":CHANnel{}:SCALe {}".format(ch,scale))
         self.do_command(":CHANnel{}:OFFSet {}".format(ch,offset))
+        # ("display" cmd not needed)
 
 
     # take a screenshot image #
@@ -156,6 +157,52 @@ class InfiniiVision(thv.thInstr):
         #$maybe increase instr.timeout temporarily if necessary
         #self.do_command(":Trigger:Force")
                 
+        
+        '''
+    ##similar to ##
+    
+    sleeper=timerange*1.1 # sleep bit longer than expected aquisition
+		
+	myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
+	mysleep(sleeper)
+	
+	myprint("done waiting, get data from Oszi..")
+	#printstatus()
+	#printerror()
+	if not askready(): 
+		myprint("failed to finish, critical error!")
+		writer(":STOP") # in case it didn't trigger
+	# or ask(":AER?"):# "query unterminated" error appears
+	#TER: trigger register?
+	# or OPeration status register
+		
+	writer(":waveform:source channel"+str(channel))		
+	success=0
+	
+	try:
+		egg.settimer(3) # wait x sec before data collection timeouts
+		writer("waveform:data?")
+		puke = raw(points) 
+		success=1
+	except Exception as ex:
+		myprint(ex) # print exception but soldier on
+		
+		if (ex==egg.timedout):
+			myprint("trying to autotrigger..")
+			autotrigger()
+			writer("waveform:data?")
+			puke = raw(points) 
+			if len(puke)>0:
+				success=1
+			#myprint("resetting trigger to preconfigured state")
+			#mytrigger()
+			
+	pass # don't crash python
+				
+	egg.cleartimer()
+        
+        
+        '''
         self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
 
 
@@ -233,6 +280,7 @@ class InfiniiVision(thv.thInstr):
 # $todo: maybe own library to check whether gui (xserver) is running or only ssh,
 # $todo: output to pdf with pdf-helper
 
+
 def myplot_bare(osc, ch):
     [times, voltages] = osc.data_dl(ch)
     plt.figure()
@@ -247,7 +295,7 @@ def myplot_bare(osc, ch):
 def test_data_wavegen_DMM():
     ## test setup ##
     # user input #
-    print("please connet CH1 to probe test signal, with x10 probe setting")
+    print("please connet CH1 to probe test signal, with x10 probe setting") # no myprint since this always faces the user in a terminal
     stuff=ucmd.askandreturn("is CH2 connected to anything?")
     if stuff=="yes":
         atten=ucmd.askandreturn("probe x10 or coax, i.e. x1?",["1","10"]) # attenuation
@@ -257,11 +305,13 @@ def test_data_wavegen_DMM():
     
     # setup oszi to measure testsignal and wavegen #
     with InfiniiVision() as osc:        
+        # note: up to "capture" the oszi is in a blank state & stopped, so the order doesn't matter
         
+        # setup trigger
         osc.setup_trigger_edge(ch=1,level=1.5,slope="positive")
         # note: trigger doesn't work if vscale out of range obviously.. catch somehow or just leave note
         
-        
+        # setup channels
         osc.setup_channel(ch=1,scale=0.5,offset=1.5,probe=10.0)
         if CH2:
             osc.setup_channel(ch=2,scale=1,offset=0,probe=atten) 
@@ -273,16 +323,17 @@ def test_data_wavegen_DMM():
         # set horizontal scale
         osc.setup_timebase(scale=0.0002, pos=0.0)
     
-        # aquire data
+        # aquire data on oszi
         osc.capture(aqtype="normal", trigtype="normal")
     
         # also do DMM_results_testing on channel of wavegen
         # Dmm_results() # $todo
         
-        # get and plot
+        # get data from oszi and plot
         myplot_bare(osc,1)
         if CH2:
             myplot_bare(osc,2)
+     
         
 # todo: implement #
 def test_saveandload():
@@ -297,9 +348,16 @@ def test_autoscale():
     pass
 
 
+def test_screenie():
+    # new session with factory defaults means empty screen screenie
+    with InfiniiVision() as osc:      
+        osc.screenie()
+
+
 #### test this library using semu Unit Testing ####
 if __name__ == '__main__': # test if called as executable, not as library
     plt.close("all")
     test_data_wavegen_DMM()
     test_saveandload()
     test_autoscale()
+    test_screenie()

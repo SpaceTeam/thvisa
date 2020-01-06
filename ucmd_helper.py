@@ -12,6 +12,7 @@ def askandreturn(question="Question", validresults=["yes","no"]):
         if text in validresults:
             return text # exit
         
+        
 def askandreturnindex(question="Question", validresults=["yes","no"]):
     return(validresults.index(askandreturn(question,validresults)))
             
@@ -19,7 +20,7 @@ def askandreturnindex(question="Question", validresults=["yes","no"]):
 if __name__ == '__main__': # test if called as executable, not as library
     options = ["yes","no","definitely"]
     options.append("maybe")
+    
     print(askandreturn("Continue?",options))
     
     print(askandreturnindex("Continue?",options))
-    

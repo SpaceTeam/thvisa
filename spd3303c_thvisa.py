@@ -35,14 +35,8 @@ class spd3303c(thv.thInstr):
                 ch1_volt = float('nan'),
                 ch2_volt = float('nan'),
                 ch1_clim = float('nan'),
-                ch2_clim = float('nan'),
-                newsettletime = -1
+                ch2_clim = float('nan')
                 ):
-
-        if newsettletime < 0: # init case
-            self.settletime = 0
-        else:
-            self.settletime = newsettletime
 
         if isinstance(ch1_en,bool):    #control output
             if(ch1_en):
@@ -78,14 +72,13 @@ class spd3303c(thv.thInstr):
             self.myprint('PSU channel 2 set to %2.2fV' % (ch2_volt))
 
 
-        # todo: use egg timer to avoid UI freeze
+        # todo: $use egg timer to avoid UI freeze
+        # todo: $only sleep if its on or output_status being toggled to increase performance
         if (ch1_en != float('nan') or ch2_en != float('nan')):
             time.sleep(self.settletime)
 
         # test for error while settings
         self.check_instrument_errors("psu_set")
-
-
 
 
 ### module test ###
@@ -94,9 +87,11 @@ if __name__ == '__main__': # test if called as executable, not as library
     with spd3303c() as psu:
         print("hello")
         psu.set_settletime(1)
-        psu.set(False,False)
-        psu.set(ch1_clim =0.1,ch1_volt=30) #major range change to make it kachunck (relais action)
-        psu.set(True,False)
+        psu.set(ch1_en=False,ch2_en=False)
+        print("major range change to make it kachunck")
+        psu.set(ch1_clim =0.1,ch1_volt=30) 
+        psu.set(ch1_en=True,ch2_en=False)
         psu.set(ch1_clim =0.1,ch1_volt=5)
-        psu.set(False,False)
+        psu.set(ch1_en=False,ch2_en=False)
     #del psu # the "with" context automatically calls the de-constructur and ends the sessoin
+    # please use it to avoid dead sessions, which result in the necessity to reboot the instrument and also the PC at times!!
