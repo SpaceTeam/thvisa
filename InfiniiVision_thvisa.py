@@ -3,7 +3,7 @@
 """
 Created on Fri Dec  6 21:35:30 2019
 
-@author: thomas
+@author: thirschbuechler
 """
 import struct
 import numpy as np

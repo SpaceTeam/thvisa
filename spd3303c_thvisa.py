@@ -3,7 +3,7 @@
 """
 Created on Fri Dec  6 21:37:06 2019
 
-@author: thomas
+@author: thirschbuechler
 """
 import time
 import math

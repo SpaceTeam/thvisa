@@ -3,7 +3,7 @@
 """
 Created on Mon Jan  6 16:55:24 2020
 
-@author: thomas
+@author: thirschbuechler
 """
 ## Important Note ##
 # the "input"-function prevents exception throw
