@@ -120,7 +120,7 @@ class thInstr(object):
 
 
     def visa_write_delayed(self, visa,msg,wait_time_ms = 100):
-
+        self.myprint("delayed Cmd = '%s'" % command)
         err_flag = visa.write(msg)
         time.sleep(wait_time_ms/1000)
         return err_flag
@@ -150,7 +150,7 @@ class thInstr(object):
     # =========================================================
     def do_command_ieee_block(self, command, values):
 
-        self.myprint("Cmb = '%s'" % command)
+        self.myprint("Cmd block = '%s'" % command)
         self.instr.write_binary_values("%s " % command, values, datatype='c')
         self.check_instrument_errors(command)
 

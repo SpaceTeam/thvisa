@@ -6,8 +6,15 @@ Created on Fri Dec  6 21:37:06 2019
 @author: thirschbuechler
 """
 import time
-import math
 import thvisa as thv
+
+# ToDo: check system:status? to find out whether in cc mode, i.e. limited
+# ToDo: series / parallel mode
+# ToDo: find out whether lock-mode exists (spam commands, ref. manual doesn't say)
+
+statedict = {
+        True: "ON",
+        False: "OFF"}
 
 class spd3303c(thv.thInstr):
 
@@ -16,6 +23,8 @@ class spd3303c(thv.thInstr):
     instrnamedef = "NPD"
     qdelaydef = 1
     
+    
+    ## instrument setup ##
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
         self.qdelay=qdelay
         self.myprint=myprint
@@ -25,73 +34,64 @@ class spd3303c(thv.thInstr):
         # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay)
         
+        # define output state, should be off, but nonetheless:
+        self.disable(1)
+        self.disable(2)
         
-    def set_settletime(self,newsettletime):
-            self.settletime = newsettletime
-
-    def set(self,
-                ch1_en = float('nan'), # defaults if no arguments given
-                ch2_en = float('nan'),
-                ch1_volt = float('nan'),
-                ch2_volt = float('nan'),
-                ch1_clim = float('nan'),
-                ch2_clim = float('nan')
-                ):
-
-        if isinstance(ch1_en,bool):    #control output
-            if(ch1_en):
-                self.visa_write_delayed(self.instr,'OUTP CH1, ON')
-                self.myprint('PSU channel 1 enabled')
-            else:
-                self.visa_write_delayed(self.instr,'OUTP CH1, OFF')
-                self.myprint('PSU channel 1 disabled')
-
-        if isinstance(ch2_en,bool):
-            if(ch2_en):
-                self.visa_write_delayed(self.instr,'OUTP CH2, ON')
-                self.myprint('PSU channel 2 enabled')
-            else:
-                self.visa_write_delayed(self.instr,'OUTP CH2, OFF')
-                self.myprint('PSU channel 2 disabled')
-
-        #todo: typecast float and check
-        if not math.isnan(ch1_volt):
-            self.visa_write_delayed(self.instr,'CH1:VOLTage, %2.2f' % (ch1_volt))
-            self.myprint('PSU channel 1 set to %2.2fV' % (ch1_volt))
-
-        if not math.isnan(ch2_volt):
-            self.visa_write_delayed(self.instr,'CH2:VOLTage, %2.2f' % (ch2_volt))
-            self.myprint('PSU channel 2 set to %2.2fV' % (ch2_volt))
-
-        if not math.isnan(ch1_clim):
-            self.visa_write_delayed(self.instr,'CH1:CURRent, %2.2f' % (ch1_clim))
-            self.myprint('PSU channel 1 set to %2.2fV' % (ch1_volt))
-
-        if not math.isnan(ch2_clim):
-            self.visa_write_delayed(self.instr,'CH2:CURRent, %2.2f' % (ch2_clim))
-            self.myprint('PSU channel 2 set to %2.2fV' % (ch2_volt))
+    # auxiliary setup #
+    def set_settletime(self,newsettletime): 
+            self.settletime = newsettletime # waittime for transients to settle
 
 
-        # todo: $use egg timer to avoid UI freeze
-        # todo: $only sleep if its on or output_status being toggled to increase performance
-        if (ch1_en != float('nan') or ch2_en != float('nan')):
-            time.sleep(self.settletime)
+    ## control functions ##
+    # outsourced from "set" to make user think whether to turn it on immediately after setting #        
+    def output(self, ch, state=float("nan")):
+        self.myprint('PSU channel {}:'.format(str(ch)))
+        self.visa_write_delayed(self.instr,'OUTP CH{}, {}'.format(str(ch), statedict[state]))
+                
+        # todo: $use eggtimer / mysleep to avoid UI freeze
+        time.sleep(self.settletime) # wait for off-transient
+        
+    # synonyms #
+    def enable(self, ch):
+        self.output(ch=ch, state=True)
+        
+    def disable(self, ch):
+        self.output(ch=ch, state=False)
 
-        # test for error while settings
-        self.check_instrument_errors("psu_set")
 
+    ## parameter setting ##
+    # per channel, since independent #
+    def set(self, ch=float('nan'), v_set = float('nan'), c_max = float('nan') ):
+        
+        self.myprint("Setting channel {} parameters:".format(str(ch)))
+        
+        self.visa_write_delayed(self.instr,'CH%i:VOLTage, %2.2f' % (ch,v_set))
+        self.visa_write_delayed(self.instr,'CH%i:CURRent, %2.2f' % (ch,c_max))
+
+        self.check_instrument_errors("psu_set") # test for error after setting things
+
+    ## DMM functions ##
+    # approximate, take with grain of salt #
+    
+    def DMM_results(self, ch=float("nan")):
+        #$todo if-else or switch-case
+        v=self.visa_write_delayed("Measure: Voltage? CH{}".format(str(ch)))
+        c=self.visa_write_delayed("Measure: Current? CH{}".format(str(ch)))
+        return [v,c]
 
 ### module test ###
 if __name__ == '__main__': # test if called as executable, not as library
-    #psu = spd3303c("NPD",qdelay=1,myprint=print)
+    #psu = spd3303c("NPD",qdelay=1,myprint=print) # no, use with-context!
     with spd3303c() as psu:
-        print("hello")
         psu.set_settletime(1)
-        psu.set(ch1_en=False,ch2_en=False)
         print("major range change to make it kachunck")
-        psu.set(ch1_clim =0.1,ch1_volt=30) 
-        psu.set(ch1_en=True,ch2_en=False)
-        psu.set(ch1_clim =0.1,ch1_volt=5)
-        psu.set(ch1_en=False,ch2_en=False)
-    #del psu # the "with" context automatically calls the de-constructur and ends the sessoin
+        psu.set(ch=1, ch1_v_set=30, c_max=0.1)
+        psu.set(ch=2, v_set=5, c_max=0.1)
+        
+        psu.enable(ch=1)
+        psu.set(ch=1, v_set=5, c_max=0.1)
+        
+        psu.disable(ch=1)
+    #del psu # the "with" context automatically calls the de-constructur and ends the session
     # please use it to avoid dead sessions, which result in the necessity to reboot the instrument and also the PC at times!!
