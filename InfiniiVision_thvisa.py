@@ -296,7 +296,7 @@ def test_data_wavegen_DMM():
     ## test setup ##
     # user input #
     print("please connet CH1 to probe test signal, with x10 probe setting") # no myprint since this always faces the user in a terminal
-    stuff=ucmd.askandreturn("is CH2 connected to anything?")
+    stuff=ucmd.askandreturn("is CH2 available for wgen monitoring?")
     if stuff=="yes":
         atten=ucmd.askandreturn("probe x10 or coax, i.e. x1?",["1","10"]) # attenuation
         CH2=True
