@@ -14,7 +14,7 @@ import string
 #from enum import Enum
 
 # ToDo:
-# more visa error types to see why instr doesn't always behave on init (psu does now)
+# merge visa_write_delayed into do_command
 
 def printdummy(*args):
     pass
@@ -64,7 +64,7 @@ class thInstr(object):
                     with self.rm.open_resource(instrument, query_delay = self.qdelay) as my_instrument:
                         # "with"context cleans class up after use / when dying
                         # better than deconstructor: https://eli.thegreenplace.net/2009/06/12/safely-using-destructors-in-python/
-                        identity = my_instrument.query('*IDN?')
+                        identity = my_instrument.query('*IDN?') # raw access (no own fcts) only here
                         self.myprint("Resource: '" + instrument + " is " + identity + '\n')
                         self.myinstruments.append(instrument)
 
@@ -120,7 +120,7 @@ class thInstr(object):
 
 
     def visa_write_delayed(self, visa,msg,wait_time_ms = 100):
-        self.myprint("delayed Cmd = '%s'" % command)
+        self.myprint("delayed Cmd = '%s'" % msg)
         err_flag = visa.write(msg)
         time.sleep(wait_time_ms/1000)
         return err_flag
@@ -191,7 +191,7 @@ class thInstr(object):
     # =========================================================
     # Check for instrument errors:
     # =========================================================
-    def check_instrument_errors(self, command):
+    def check_instrument_errors(self, reference):
 
         while True:
             error_string = self.instr.query(":SYSTem:ERRor?")
@@ -199,14 +199,14 @@ class thInstr(object):
                 error_string = error_string.strip("ERROR: ") # remove that
                 error_string = error_string.strip("+") # remove that
                 if error_string.find("0", 0, 1) == -1: # Not "ERROR: 0  No Error"
-                   self.myprint("ERROR: %s, command: '%s'" % (error_string, command))
+                   self.myprint("ERROR: %s, reference: '%s'" % (error_string, reference))
                    self.myprint("Exiting on error.")
                    self.myprint("i can see my house from up here")
                    sys.exit(1)
                 else: # "No error"
                     break
             else: # :SYSTem:ERRor? should always return string.
-               self.myprint("ERROR: :SYSTem:ERRor? returned nothing, command: '%s'" % command)
+               self.myprint("ERROR: :SYSTem:ERRor? returned nothing, reference: '%s'" % reference)
                self.myprint("Exiting due to error.")
                sys.exit(1)
     
@@ -221,6 +221,7 @@ class thInstr(object):
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.__del__() # kill, kill!
+        self.myprint("closing instr. session")
         #return True
     
     
