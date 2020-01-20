@@ -23,10 +23,10 @@ class InfiniiVision(thv.thInstr):
         
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
         self.timeout = 15000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout"
-        self.instrname=instrname # the defaults can't be used other than to become properties
+        self.instrname=instrname # the defaults no't be used other than to become properties
         self.myprint=myprint
         self.qdelay=qdelay
-        print(qdelay)
+        self.exceptionhappened=0 # used somewhere?
         
         # call parent init #
         # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
@@ -54,9 +54,9 @@ class InfiniiVision(thv.thInstr):
         
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        if self.instr: # del may be called twice, so gate the call that it may not be called on an empty instr
-            self.do_command("*CLS")
+        if self.instr and not self.exception: # del may be called twice, so gate the call that it may not be called on an empty instr
             self.do_command(":System:Lock 0") # unlock user input in case it was locked
+
         super(InfiniiVision, self).__exit__( exc_type, exc_value, tb) # not indented under "if"!
 
 
@@ -208,16 +208,29 @@ class InfiniiVision(thv.thInstr):
 
         self.myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
         time.sleep(sleeper)
-        self.myprint("checking errors, when complete, digitize")
-        self.check_instrument_errors("aquisition time mark")
+
+        self.do_command(":Trigger:Force") # if nothing triggered, get whatever's there
+        time.sleep(sleeper*1.1)
         #self.do_command(":STOP") # didn't help with no_trigger issue
 
+        self.myprint("checking errors, when complete, digitize")
+        self.check_instrument_errors("aquisition time mark")
+        #self.do_command(":STOP") # didn't help with no_trigger issuef
+
+        '''
         # this didn't break the no-trigger hang
-        if 1:        
-            self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
+        try:
+            self.do_command(":digitize") # digitize all channels: now it's stored in the oszi # DIGITIZE BLOCKS TILL SOMEHTING HAPPENS; CAN't be unblocked!
+        # reference:                 'Debug.Print ":DIGitize blocks until all segments acquired."
+
+
+        except Exception as ex:
+            self.myprint("Exception at digitize: ",ex)
+            sys.exit(1)
         else: 
             self.print("not complete, exiting..")
             sys.exit(1)
+        '''
     
 
 
@@ -249,6 +262,8 @@ class InfiniiVision(thv.thInstr):
 
         # Display the waveform settings from preamble:
         preamble_string = self.do_query_string(":WAVeform:PREamble?")
+        if not preamble_string:
+            self.exception("empty preamble")
         (
             wav_form, acq_type, wfmpts, avgcnt, x_increment, x_origin,
             x_reference, y_increment, y_origin, y_reference

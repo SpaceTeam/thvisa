@@ -6,7 +6,7 @@ Created on Sat Nov 16 18:23:02 2019
 @author: thirschbuechler
 """
 # re-invent the wheel, because python-ivi seems pretty dead, unfortunately.
-import sys
+import sys # don't use sys.exit() , it  terminates a while_context_exit!! USE thvisa classes' exit() (no underlines required)
 import visa
 import numpy as np
 import time
@@ -102,15 +102,49 @@ class thInstr(object):
 
     # end __init__
 
+    def __del__(self):
+        #self.instr.close() # shut down # gets called by __del__ of rm
+        # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
+        if (self.instr):
+            self.instr.close()
+            self.myprint("say goodbye, instrument {}!".format(self.instrname))
+
+
+    def exit(self): # shorthand to avoid sys.exit()
+        self.__exit__(None, None, None)
+    
+    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
+        self.myprint("closing instr. session..")
+        self.__del__() # kill, kill!
+        if not self.instr: # if the instr was closed already
+            self.myprint("instr handle invalid in del routine, exiting...")
+            sys.exit(0)
+        
+        #return True
+    
+    
+    def __enter__(self):# Qwith" context entered: do nothing other than init
+        #self.__init__() # come to life
+        #return True
+        return self
+    
+    def exception(self, e):
+        self.myprint("Exception: ",e)
+        self.exit()
+        
     def getinstrument(self, name,qdelay=0): #name segment as input #$todo: inline if no other use 
+        try:
+            for instrument in self.myinstruments:
+                if name in instrument:
+                    return(self.rm.open_resource(instrument, query_delay=qdelay)) #exits on first find
+        except Exception as e:
+            self.exception(e)
 
-        for instrument in self.myinstruments:
-            if name in instrument:
-                return(self.rm.open_resource(instrument, query_delay=qdelay)) #exits on first find
-
+            
         #else, this happens:
-        self.myprint("oh noes, requested instrument not found!")#$do something?
-        sys.exit(0)
+        s="oh noes, requested instrument not found!"
+        self.myprint(s)
+        self.exception(s)
 
 
     # depreciated: do commands as class functions, not externally
@@ -134,29 +168,37 @@ class thInstr(object):
     # Send a command and check for errors:
     # =========================================================
     def do_command(self, command, hide_params=False):
-
-        if hide_params:
-            (header, data) = string.split(command, " ", 1)
-            self.myprint("\nCmd = '%s'" % header)
-        else:
-            self.myprint("\nCmd = '%s'" % command)
-
-        self.instr.write("%s" % command)
-
-        if hide_params:
-            self.check_instrument_errors(header)
-        else:
-            self.check_instrument_errors(command)
+        
+        try:
+            if hide_params:
+                (header, data) = string.split(command, " ", 1)
+                self.myprint("\nCmd = '%s'" % header)
+            else:
+                self.myprint("\nCmd = '%s'" % command)
+    
+            self.instr.write("%s" % command)
+    
+            if hide_params:
+                self.check_instrument_errors(header)
+            else:
+                self.check_instrument_errors(command)
+        
+        except Exception as e:
+            self.exception(e)
 
 
     # =========================================================
     # Send a command and binary values and check for errors:
     # =========================================================
     def do_command_ieee_block(self, command, values):
-
-        self.myprint("Cmd block = '%s'" % command)
-        self.instr.write_binary_values("%s " % command, values, datatype='c')
-        self.check_instrument_errors(command)
+       
+        try:
+            self.myprint("Cmd block = '%s'" % command)
+            self.instr.write_binary_values("%s " % command, values, datatype='c')
+            self.check_instrument_errors(command)
+            
+        except Exception as e:
+            self.exception(e)
 
 
     # =========================================================
@@ -164,33 +206,34 @@ class thInstr(object):
     # =========================================================
     def do_query_string(self, query):
 
-        self.myprint("Qys = '%s'" % query)
-        result = self.instr.query("%s" % query)
-        self.check_instrument_errors(query)
-        return result
+        try: # can cause VI_ERROR_TMO, so gate with "try"
+            self.myprint("Qys = '%s'" % query)
+            result = self.instr.query("%s" % query)
+            self.check_instrument_errors(query)
+            return result
+        
+        except Exception as e:
+            self.exception(e)
 
 
     # =========================================================
     # Send a query, check for errors, return floating-point value:
     # =========================================================
     def do_query_number(self, query):
-
-        self.myprint("Qyn = '%s'" % query)
-        results = self.instr.query("%s" % query)
-        self.check_instrument_errors(query)
-        return float(results)
+        return float(self.do_query_string(query))
 
 
     # =========================================================
     # Send a query, check for errors, return binary values:
     # =========================================================
     def do_query_ieee_block(self, query):
-
-        self.myprint("Qys = '%s'" % query)
-        result = self.instr.query_binary_values("%s" % query, datatype='s')
-        self.check_instrument_errors(query)
-        return result[0]
-
+        try:
+            self.myprint("Qys = '%s'" % query)
+            result = self.instr.query_binary_values("%s" % query, datatype='s')
+            self.check_instrument_errors(query)
+            return result[0]
+        except Exception as e:
+            self.exception(e)
 
     # =========================================================
     # Check for instrument errors:
@@ -200,40 +243,20 @@ class thInstr(object):
         while True:
             error_string = self.instr.query(":SYSTem:ERRor?")
             if error_string: # If there is an error string value.
+               
                 error_string = error_string.strip("ERROR: ") # remove that
                 error_string = error_string.strip("+") # remove that
+                
                 if error_string.find("0", 0, 1) == -1: # Not "ERROR: 0  No Error"
                    self.myprint("ERROR: %s, reference: '%s'" % (error_string, reference))
-                   self.myprint("Exiting on error.")
                    self.myprint("i can see my house from up here")
-                   sys.exit(1)
+                   self.exception(error_string + reference)
+
                 else: # "No error"
                     break
             else: # :SYSTem:ERRor? should always return string.
-               self.myprint("ERROR: :SYSTem:ERRor? returned nothing, reference: '%s'" % reference)
-               self.myprint("Exiting due to error.")
-               sys.exit(1)
-    
-    
-    def __del__(self):
-        #self.instr.close() # shut down # gets called by __del__ of rm
-        # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
-        if (self.instr):
-            self.instr.close()
-            self.myprint("say goodbye, instrument {}!".format(self.instrname))
+               self.exception("Sys error no msg")
 
-    
-    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        self.myprint("closing instr. session")
-        self.__del__() # kill, kill!
-        
-        #return True
-    
-    
-    def __enter__(self):# Qwith" context entered: do nothing other than init
-        #self.__init__() # come to life
-        #return True
-        return self
 
 
 ### module test ###
