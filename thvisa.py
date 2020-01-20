@@ -20,6 +20,10 @@ def printdummy(*args):
     pass
 
 
+statedict = {
+        True: "ON",
+        False: "OFF"}
+
 class thInstr(object):
     # Python3 object orientation:
     # first parameter "object" for inheritence can be ignored
@@ -220,8 +224,9 @@ class thInstr(object):
 
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        self.__del__() # kill, kill!
         self.myprint("closing instr. session")
+        self.__del__() # kill, kill!
+        
         #return True
     
     

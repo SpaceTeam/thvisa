@@ -5,6 +5,8 @@ Created on Fri Dec  6 21:35:30 2019
 
 @author: thirschbuechler
 """
+import sys
+import time
 import struct
 import numpy as np
 import ucmd_helper as ucmd
@@ -53,6 +55,7 @@ class InfiniiVision(thv.thInstr):
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         if self.instr: # del may be called twice, so gate the call that it may not be called on an empty instr
+            self.do_command("*CLS")
             self.do_command(":System:Lock 0") # unlock user input in case it was locked
         super(InfiniiVision, self).__exit__( exc_type, exc_value, tb) # not indented under "if"!
 
@@ -75,11 +78,7 @@ class InfiniiVision(thv.thInstr):
 
     # set the state of the wave gen (default after reset: disable)
     def wgen_output(self,out_enable):
-        if out_enable:
-            self.do_command(":WGEN:OUTPut ON")
-        else:
-            self.do_command(":WGEN:OUTPut OFF")
-
+        self.do_command(":WGEN:OUTPut {}".format(thv.statedict[out_enable]))
 
     # setup the trigger without enabling it #
     def setup_trigger_edge(self,ch=1,level=1.5,slope="positive"):
@@ -91,8 +90,9 @@ class InfiniiVision(thv.thInstr):
 
     # setup the horizontal axis #
     def setup_timebase(self,scale=0.0002, pos=0.0):
-        self.do_command(":TIMebase:SCALe 0.0002")
-        self.do_command(":TIMebase:POSition 0.0") # leave the offset close to the trigger!
+        self.do_command(":TIMebase:SCALe {}".format(float(scale)))
+        self.do_command(":TIMebase:POSition {}".format(float(pos))) # leave the offset close to the trigger!
+        self.timerange = 10 * scale
 
 
     # setup the channel #
@@ -159,51 +159,66 @@ class InfiniiVision(thv.thInstr):
                 
         
         '''
-    ##similar to ##
-    
-    sleeper=timerange*1.1 # sleep bit longer than expected aquisition
-		
-	myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
-	mysleep(sleeper)
-	
-	myprint("done waiting, get data from Oszi..")
-	#printstatus()
-	#printerror()
-	if not askready(): 
-		myprint("failed to finish, critical error!")
-		writer(":STOP") # in case it didn't trigger
-	# or ask(":AER?"):# "query unterminated" error appears
-	#TER: trigger register?
-	# or OPeration status register
-		
-	writer(":waveform:source channel"+str(channel))		
-	success=0
-	
-	try:
-		egg.settimer(3) # wait x sec before data collection timeouts
-		writer("waveform:data?")
-		puke = raw(points) 
-		success=1
-	except Exception as ex:
-		myprint(ex) # print exception but soldier on
-		
-		if (ex==egg.timedout):
-			myprint("trying to autotrigger..")
-			autotrigger()
-			writer("waveform:data?")
-			puke = raw(points) 
-			if len(puke)>0:
-				success=1
-			#myprint("resetting trigger to preconfigured state")
-			#mytrigger()
-			
-	pass # don't crash python
-				
-	egg.cleartimer()
+        ##similar to ##
         
-        
+        sleeper=timerange*1.1 # sleep bit longer than expected aquisition
+    		
+    	myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
+    	mysleep(sleeper)
+    	
+    	myprint("done waiting, get data from Oszi..")
+    	#printstatus()
+    	#printerror()
+    	if not askready(): 
+    		myprint("failed to finish, critical error!")
+    		writer(":STOP") # in case it didn't trigger
+    	# or ask(":AER?"):# "query unterminated" error appears
+    	#TER: trigger register?
+    	# or OPeration status register
+    		
+    	writer(":waveform:source channel"+str(channel))		
+    	success=0
+    	
+    	try:
+    		egg.settimer(3) # wait x sec before data collection timeouts
+    		writer("waveform:data?")
+    		puke = raw(points) 
+    		success=1
+    	except Exception as ex:
+    		myprint(ex) # print exception but soldier on
+    		
+    		if (ex==egg.timedout):
+    			myprint("trying to autotrigger..")
+    			autotrigger()
+    			writer("waveform:data?")
+    			puke = raw(points) 
+    			if len(puke)>0:
+    				success=1
+    			#myprint("resetting trigger to preconfigured state")
+    			#mytrigger()
+    			
+    	pass # don't crash python
+    				
+    	egg.cleartimer()
+            
+            
         '''
-        self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
+                
+        sleeper=self.timerange*1.1 # sleep bit longer than expected aquisition
+
+        self.myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
+        time.sleep(sleeper)
+        self.myprint("checking errors, when complete, digitize")
+        self.check_instrument_errors("aquisition time mark")
+        #self.do_command(":STOP") # didn't help with no_trigger issue
+
+        # this didn't break the no-trigger hang
+        if 1:        
+            self.do_command(":digitize") # digitize all channels: now it's stored in the oszi
+        else: 
+            self.print("not complete, exiting..")
+            sys.exit(1)
+    
 
 
     # only use if you got an error and don't know what you are dealing with!! #

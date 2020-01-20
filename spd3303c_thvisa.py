@@ -16,10 +16,6 @@ import thvisa as thv
 #       maybe as locklevel (0=none, 1=lock, 2=lock + while(not confirmed when locked))
 #       aka level=[engineer, user, toddler]
 
-statedict = {
-        True: "ON",
-        False: "OFF"}
-
 class spd3303c(thv.thInstr):
 
     # overwrite class inherited defaults
@@ -67,7 +63,7 @@ class spd3303c(thv.thInstr):
     def output(self, ch, state=float("nan")):
         self.myprint('PSU channel {}:'.format(str(ch)))
         self.visa_write_delayed(self.instr,"*unlock") # output can only be changed in unlocked state
-        self.visa_write_delayed(self.instr,'OUTP CH{}, {}'.format(str(ch), statedict[state]))
+        self.visa_write_delayed(self.instr,'OUTP CH{}, {}'.format(str(ch), thv.statedict[state]))
         self.visa_write_delayed(self.instr,"*lock")
                 
         # todo: $use eggtimer / mysleep to avoid UI freeze
