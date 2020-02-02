@@ -336,7 +336,7 @@ def test_screenie():
 
 
 #### test this library using semu Unit Testing ####
-if __name__ == '__main__': # test if called as executable, not as library
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
     plt.close("all")
     test_data_wavegen_DMM()
     test_saveandload()

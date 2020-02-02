@@ -38,13 +38,14 @@ class thInstr(object):
     instrnamedef = 0
     qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
     # Initializer / Instance Attributes
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay=0):
 
         self.myprint=myprint
         self.myinstruments = []
         self.instr = 0
         self.instrname = instrname
-        self.qdelay = qdelay
+        self.qdelay = qdelay # initial query delay
+        self.wdelay = wdelay # write quer delay
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
@@ -171,9 +172,9 @@ class thInstr(object):
     	self.myprint=function
 
 
-    def visa_write_delayed(self, visa,msg,wait_time_ms = 100):
+    def visa_write_delayed(self, msg,wait_time_ms = 100):
         self.myprint("delayed Cmd = '%s'" % msg)
-        err_flag = visa.write(msg)
+        err_flag = self.instr.write(msg)
         time.sleep(wait_time_ms/1000)
         return err_flag
 
@@ -186,21 +187,23 @@ class thInstr(object):
         try:
             if hide_params:
                 (header, data) = string.split(command, " ", 1)
-                self.myprint("\nCmd = '%s'" % header)
+                printy=header
             else:
-                self.myprint("\nCmd = '%s'" % command)
-    
+                printy=command    
+                
+            self.myprint("\nCmd = '%s'" % printy)
             self.instr.write("%s" % command)
             
             # tested whether this clears the infiniivision TER bit, it doesn't
-            if hide_params:
-                self.check_instrument_errors(header)
-            else:
-                self.check_instrument_errors(command)
+            self.check_instrument_errors(printy)
+
                 
         
         except Exception as e:
             self.exception(e)
+
+        finally:
+            time.sleep(self.wdelay)
 
 
     # =========================================================
@@ -215,6 +218,9 @@ class thInstr(object):
             
         except Exception as e:
             self.exception(e)
+            
+        finally:
+            time.sleep(self.wdelay)
 
 
     # =========================================================
@@ -231,7 +237,9 @@ class thInstr(object):
         except Exception as e:
             self.exception(e)
 
-
+        finally:
+            time.sleep(self.wdelay)
+            
     # =========================================================
     # Send a query, check for errors, return floating-point value:
     # =========================================================
@@ -250,7 +258,10 @@ class thInstr(object):
             return result[0]
         except Exception as e:
             self.exception(e)
-
+        
+        finally:
+            time.sleep(self.wdelay)
+            
     # =========================================================
     # Check for instrument errors:
     # =========================================================

@@ -33,8 +33,9 @@ class spd3303c(thv.thInstr):
         
         # call parent init #
         # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
-        super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay)
-        
+        super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay, wdelay=0.1)
+        self.timeout = 15000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout"
+
         # define output state, should be off, but nonetheless:
         # can't do here, no handle open! make one with "with" or omit
         # self.disable(1)
@@ -42,32 +43,35 @@ class spd3303c(thv.thInstr):
         
         
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit
-        self.visa_write_delayed(self.instr, "*unlock") # return full control, was partially locked anyhow
+        self.visa_write_delayed( "*unlock") # return full control, was partially locked anyhow
         super(spd3303c, self).__exit__( exc_type, exc_value, tb) # call inherited fct
 
             
-    # auxiliary setup #
+    ## auxiliary setup ##
     def set_settletime(self,newsettletime): 
             self.settletime = newsettletime # waittime for transients to settle
 
     def test_undoc_cmd(self): # no {preset, reset, factory, *rst, *cls, *tst, syst:pres, *OPC?} comands
-        self.visa_write_delayed(self.instr,"*unlock") # output can only be changed in unlocked state
-        self.visa_write_delayed(self.instr, "*OPC?")
+        self.visa_write_delayed("*unlock") # output can only be changed in unlocked state
+        self.visa_write_delayed( "*OPC?")
         #self.beep()
         
     def beep(self): # upset instrument by sending garbage
-        self.visa_write_delayed(self.instr, "beep")
+        self.visa_write_delayed( "beep")
+
 
     ## control functions ##
     # outsourced from "set" to make user think whether to turn it on immediately after setting #        
     def output(self, ch, state=float("nan")):
         self.myprint('PSU channel {}:'.format(str(ch)))
-        self.visa_write_delayed(self.instr,"*unlock") # output can only be changed in unlocked state
-        self.visa_write_delayed(self.instr,'OUTP CH{}, {}'.format(str(ch), thv.statedict[state]))
-        self.visa_write_delayed(self.instr,"*lock")
+        self.visa_write_delayed("*unlock") # output can only be changed in unlocked state
+        self.visa_write_delayed('OUTP CH{}, {}'.format(str(ch), thv.statedict[state]))
+        self.visa_write_delayed("*lock")
                 
         # todo: $use eggtimer / mysleep to avoid UI freeze
         time.sleep(self.settletime) # wait for off-transient
+        self.check_instrument_errors("psu_set") # test for error after setting things
+
         
     # synonyms #
     def enable(self, ch):
@@ -79,29 +83,35 @@ class spd3303c(thv.thInstr):
 
     ## parameter setting ##
     # per channel, since independent #
-    def set(self, ch=float('nan'), v_set = float('nan'), c_max = float('nan') ):
-        
+    def set(self, ch=float('nan'), v_set = float('nan'), c_max = float('nan')):
         self.myprint("Setting channel {} parameters:".format(str(ch)))
         
-        self.visa_write_delayed(self.instr,"*unlock") # output can only be changed in unlocked state
-        self.visa_write_delayed(self.instr,'CH%i:VOLTage, %2.2f' % (ch,v_set))
-        self.visa_write_delayed(self.instr,'CH%i:CURRent, %2.2f' % (ch,c_max))
-        self.visa_write_delayed(self.instr,"*lock") 
-
+        self.visa_write_delayed("*unlock") # output can only be changed in unlocked state
+        self.visa_write_delayed('CH%i:VOLTage, %2.2f' % (ch,v_set))
+        self.visa_write_delayed('CH%i:CURRent, %2.2f' % (ch,c_max))
+        self.visa_write_delayed("*lock") 
 
         self.check_instrument_errors("psu_set") # test for error after setting things
 
+    # doesn't work for now, harmonize visa_write_delayed first
+    def setp(self, ch=float('nan'), v_set = float('nan'), c_max = float('nan')): # paranoid variant, assume someone may hit V/I wheel       
+        while (not (self.DMM_results(ch)==[v_set,c_max])):
+            self.set(ch , v_set, c_max)
+
+
     ## DMM functions ##
+    # don't work for now, harmonize visa_write_delayed first
     # approximate, take with grain of salt #
-    
     def DMM_results(self, ch=float("nan")):
         #$todo if-else or switch-case
-        v=self.visa_write_delayed("Measure: Voltage? CH{}".format(str(ch)))
-        c=self.visa_write_delayed("Measure: Current? CH{}".format(str(ch)))
-        return [v,c]
+        v=self.visa_write_delayed( "Measure: Voltage? CH{}".format(str(ch)))
+        c=self.visa_write_delayed( "Measure: Current? CH{}".format(str(ch)))
+        self.myprint(v)
+        self.myprint(c)
+        return [float(v),float(c)]
 
 ### module test ###
-if __name__ == '__main__': # test if called as executable, not as library
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
     #psu = spd3303c("NPD",qdelay=1,myprint=print) # no, use with-context!
     with spd3303c() as psu:
         psu.disable(1)
