@@ -54,8 +54,10 @@ class InfiniiVision(thv.thInstr):
         
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        if self.instr and not self.exception: # del may be called twice, so gate the call that it may not be called on an empty instr
-            self.do_command(":System:Lock 0") # unlock user input in case it was locked
+        self.do_command(":System:Lock 0") # unlock user input in case it was locked
+
+        #if self.instr and not self.exception: # del may be called twice, so gate the call that it may not be called on an empty instr
+        #    self.do_command(":System:Lock 0") # unlock user input in case it was locked
 
         super(InfiniiVision, self).__exit__( exc_type, exc_value, tb) # not indented under "if"!
 
@@ -136,11 +138,20 @@ class InfiniiVision(thv.thInstr):
         self.do_command_ieee_block(":SYSTem:SETup", sSetup)
         self.myprint("Setup bytes restored: %d" % len(sSetup))
 
+    def check_reset_trigbit(self): # remember to call with braces, otherwise you get the fct-pointer
+        return self.do_query_number(":TER?") # get the trig'd bit & reset it to 0
+        # not "*OPC?", this only regards digital SCPI interaction not osci frontend, i guess
+        # probably query unterminated-issues when using too little timeout-time on queries
+
 
     # enable trigger and get data #
-    # assuming osci is in stop mode.. is  after reset
-    def capture(self,aqtype="normal", trigtype="single"): 
-        
+    def capture(self,aqtype="normal", trigtype="single", extratime=0, waitforit=0): # extratime for aquision, e.g. when looking for spurious signals 
+        #self.do_command(":digitize") # DIGITIZE BLOCKS TILL SOMEHTING HAPPENS; CAN't be unblocked via SCPI! DO NOT USE!
+
+        self.do_command(":STOP") # for good measure
+        self.check_reset_trigbit()
+
+        # actual aquisition settings
         self.do_command(":ACQuire:TYPE {}".format(aqtype)) 
                 
         if trigtype=="normal":
@@ -152,85 +163,25 @@ class InfiniiVision(thv.thInstr):
         else:
             self.do_command(":Single") # run alone, once! yes, run is implied
         
-        #$todo: timeout acc. to 1-5 periods and force via .. if no signal, as default option
-        #$a capture timeout is nasty and will kill the session and lock the frontpanel! yes, the :system:lock was turned off for this test!
-        #$maybe increase instr.timeout temporarily if necessary
-        #self.do_command(":Trigger:Force")
-                
-        
-        '''
-        ##similar to ##
-        
-        sleeper=timerange*1.1 # sleep bit longer than expected aquisition
-    		
-    	myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
-    	mysleep(sleeper)
-    	
-    	myprint("done waiting, get data from Oszi..")
-    	#printstatus()
-    	#printerror()
-    	if not askready(): 
-    		myprint("failed to finish, critical error!")
-    		writer(":STOP") # in case it didn't trigger
-    	# or ask(":AER?"):# "query unterminated" error appears
-    	#TER: trigger register?
-    	# or OPeration status register
-    		
-    	writer(":waveform:source channel"+str(channel))		
-    	success=0
-    	
-    	try:
-    		egg.settimer(3) # wait x sec before data collection timeouts
-    		writer("waveform:data?")
-    		puke = raw(points) 
-    		success=1
-    	except Exception as ex:
-    		myprint(ex) # print exception but soldier on
-    		
-    		if (ex==egg.timedout):
-    			myprint("trying to autotrigger..")
-    			autotrigger()
-    			writer("waveform:data?")
-    			puke = raw(points) 
-    			if len(puke)>0:
-    				success=1
-    			#myprint("resetting trigger to preconfigured state")
-    			#mytrigger()
-    			
-    	pass # don't crash python
-    				
-    	egg.cleartimer()
+        # waiting for aquisition
+        if waitforit:        
+            while (self.check_reset_trigbit()==0):
+                time.sleep(1)
+                self.myprint("waiting..")
+        else:
+            sleeper=self.timerange*1.5+extratime # sleep bit longer than expected aquisition
             
-            
-        '''
-                
-        sleeper=self.timerange*1.1 # sleep bit longer than expected aquisition
+            self.myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
+            time.sleep(sleeper)
+        
 
-        self.myprint("sleeping %.3g s for data aquisition into the Oszi... " %(sleeper))
-        time.sleep(sleeper)
+            if (self.check_reset_trigbit()==0):
+                self.myprint("trigger didn't capture, force-trigger to avoid lockup on readout")
+        
+                self.do_command(":Trigger:Force") # if nothing triggered, get whatever's there
+                time.sleep(sleeper)
+                self.do_command(":STOP") 
 
-        self.do_command(":Trigger:Force") # if nothing triggered, get whatever's there
-        time.sleep(sleeper*1.1)
-        #self.do_command(":STOP") # didn't help with no_trigger issue
-
-        self.myprint("checking errors, when complete, digitize")
-        self.check_instrument_errors("aquisition time mark")
-        #self.do_command(":STOP") # didn't help with no_trigger issuef
-
-        '''
-        # this didn't break the no-trigger hang
-        try:
-            self.do_command(":digitize") # digitize all channels: now it's stored in the oszi # DIGITIZE BLOCKS TILL SOMEHTING HAPPENS; CAN't be unblocked!
-        # reference:                 'Debug.Print ":DIGitize blocks until all segments acquired."
-
-
-        except Exception as ex:
-            self.myprint("Exception at digitize: ",ex)
-            sys.exit(1)
-        else: 
-            self.print("not complete, exiting..")
-            sys.exit(1)
-        '''
     
 
 

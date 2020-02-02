@@ -52,7 +52,8 @@ class thInstr(object):
             instruments = np.array(self.rm.list_resources())
         except OSError: # not of visa but OS
            self.myprint("OS error, maybe restart python script host, or library not found?")
-           sys.exit(0)
+           #ys.exit(0)
+           self.exit() # re-raise expection
 
         # this only works sometimes.. pyvisa.. catch general exception
         # for some reason, it's lucky to query the keysight oszi first...
@@ -78,17 +79,25 @@ class thInstr(object):
                     #del my_instrument
 
                 except visa.VisaIOError:
-                   self.myprint('VisaError: No connection to: ' + instrument+", maybe chunk size or msg timeout, query_delay")
+                   e='VisaError: No connection to: ' + instrument+", maybe chunk size or msg timeout, query_delay"
+                   self.exception(e)
                    # like VisaIOError.VI_ERROR_INV_SETUP VisaIOError.VI_ERROR_CONN_LOST:
                 except visa.InvalidSession:
-                    self.myprint("VisaError: session closed before access") # tested via closing session before "IDN?"
+                    e=("VisaError: session closed before access") # tested via closing session before "IDN?"
+                    self.exception(e)
                 except visa.VisaIOWarning:
-                   self.myprint("VisaError:  VisaIOWarning")
+                   e=("VisaError:  VisaIOWarning")
+                   self.exception(e)
                 except OSError: # not of visa but OS
-                    self.myprint("OS error, maybe restart python script host, or library not found?")
+                    e=("OS error, maybe restart python script host, or library not found?")
+                    self.exception(e)
+                except ValueError as e: # e.g. wrong format, etc.
+                    self.exception(e) # note: this was supposed to prevent osci-lockup on no_trigger scenario,
+                    # but trigger:force proved to do that, reading wavedata when no aquisition happened remains bad
                 except:
                    self.myprint("VisaError:  Unexpected error:", sys.exc_info()[0])
                    self.myprint("maybe resource busy , i.e. increase query_delay or unplug-replug"+"\n"+"or already taken by other/older session, if you didn't use a \"with\"-context")
+                   self.exception()
 
 
         # intendation level: __init__
@@ -111,8 +120,13 @@ class thInstr(object):
 
 
     def exit(self): # shorthand to avoid sys.exit()
-        self.__exit__(None, None, None)
+        #self.__exit__(None, None, None)
+        
+        # misguided understanding: to do an exit, this needs to raise an exception
+        # not call __exit__ which only gets called on regular exit but doesn't cause it!!
+        raise Exception("while-context exit dialed in")
     
+    # misguided past understanding: this gets called on whith-exit #
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.myprint("closing instr. session..")
         self.__del__() # kill, kill!
@@ -128,7 +142,7 @@ class thInstr(object):
         #return True
         return self
     
-    def exception(self, e):
+    def exception(self, e="lazyprogrammer"):
         self.myprint("Exception: ",e)
         self.exit()
         
@@ -177,11 +191,13 @@ class thInstr(object):
                 self.myprint("\nCmd = '%s'" % command)
     
             self.instr.write("%s" % command)
-    
+            
+            # tested whether this clears the infiniivision TER bit, it doesn't
             if hide_params:
                 self.check_instrument_errors(header)
             else:
                 self.check_instrument_errors(command)
+                
         
         except Exception as e:
             self.exception(e)
