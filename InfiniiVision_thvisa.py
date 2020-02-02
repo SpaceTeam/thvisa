@@ -5,13 +5,15 @@ Created on Fri Dec  6 21:35:30 2019
 
 @author: thirschbuechler
 """
-import sys
 import time
 import struct
 import numpy as np
 import ucmd_helper as ucmd
 import thvisa as thv
 import matplotlib.pyplot as plt
+
+# ToDo: define dictionaries for all class-external fct access,
+#   so typos can't be sent to instrument
 
 class InfiniiVision(thv.thInstr):
 # code guidelines: default setup has to measure testsignal with default probe

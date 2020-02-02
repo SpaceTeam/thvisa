@@ -46,6 +46,7 @@ class thInstr(object):
         self.instrname = instrname
         self.qdelay = qdelay # initial query delay
         self.wdelay = wdelay # write quer delay
+        self.alwayscheck=True
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
@@ -171,14 +172,6 @@ class thInstr(object):
     def setprint(self, function): # to redirect print to pdf, print, etc.
     	self.myprint=function
 
-
-    def visa_write_delayed(self, msg,wait_time_ms = 100):
-        self.myprint("delayed Cmd = '%s'" % msg)
-        err_flag = self.instr.write(msg)
-        time.sleep(wait_time_ms/1000)
-        return err_flag
-
-
     # =========================================================
     # Send a command and check for errors:
     # =========================================================
@@ -194,9 +187,9 @@ class thInstr(object):
             self.myprint("\nCmd = '%s'" % printy)
             self.instr.write("%s" % command)
             
-            # tested whether this clears the infiniivision TER bit, it doesn't
-            self.check_instrument_errors(printy)
-
+            if self.alwayscheck:
+                time.sleep(self.wdelay)
+                self.check_instrument_errors(printy)
                 
         
         except Exception as e:
@@ -214,7 +207,10 @@ class thInstr(object):
         try:
             self.myprint("Cmd block = '%s'" % command)
             self.instr.write_binary_values("%s " % command, values, datatype='c')
-            self.check_instrument_errors(command)
+            
+            if self.alwayscheck:
+                time.sleep(self.wdelay)
+                self.check_instrument_errors(command)
             
         except Exception as e:
             self.exception(e)
@@ -231,7 +227,11 @@ class thInstr(object):
         try: # can cause VI_ERROR_TMO, so gate with "try"
             self.myprint("Qys = '%s'" % query)
             result = self.instr.query("%s" % query)
-            self.check_instrument_errors(query)
+            
+            if self.alwayscheck:
+                time.sleep(self.wdelay)
+                self.check_instrument_errors(query)
+                
             return result
         
         except Exception as e:
@@ -254,7 +254,11 @@ class thInstr(object):
         try:
             self.myprint("Qys = '%s'" % query)
             result = self.instr.query_binary_values("%s" % query, datatype='s')
-            self.check_instrument_errors(query)
+            
+            if self.alwayscheck:
+                time.sleep(self.wdelay)
+                self.check_instrument_errors(query)
+                        
             return result[0]
         except Exception as e:
             self.exception(e)
@@ -265,7 +269,7 @@ class thInstr(object):
     # =========================================================
     # Check for instrument errors:
     # =========================================================
-    def check_instrument_errors(self, reference):
+    def check_instrument_errors(self, reference): # tested whether this clears the infiniivision TER bit, it doesn't
 
         while True:
             error_string = self.instr.query(":SYSTem:ERRor?")
