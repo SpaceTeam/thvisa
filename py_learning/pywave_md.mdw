@@ -1,0 +1,59 @@
+% pdfhelper demo pyweave
+% thirschbuechler
+% 8th March 2020
+
+<<echo=False>>=
+# note: the chunk option settings [True, False] are case sensitive
+import matplotlib.pyplot as plt
+import pdf_helper as pdf
+import numpy as np
+import os
+
+# prep x-axis
+x = np.arange(0,2*np.pi,np.pi/16)
+
+# get logo
+image = plt.imread("white-quer.png", format=None)
+@
+
+<<echo=False, include=True>>=
+# draw logo
+
+fig, ax = plt.subplots(dpi=300) # a new figure/axis has to be explicitly added; figsize in inches
+
+#todo: probably use something like
+#https://scikit-image.org/docs/dev/auto_examples/transform/plot_rescale.html
+# to downscale logo properly, "figsize" by matplotlib seems to only downsize the quality
+
+ax.axis('off')
+im = plt.imshow(image)
+@
+
+# Headline 1
+
+This is general text inside an mdw file
+
+## Subheading 1
+
+Let's plot something
+
+
+
+### first plot
+
+First figure shows a sine
+
+<<echo=False, include=True>>=
+figure = plt.figure()
+plt.plot(x,np.sin(x)) # can happen after figure ref is added to list figs
+# plt.show() # interrupts program flow and waits for user to close figure
+@
+
+### second plot
+
+Second figure shows a cosine
+
+<<echo=False, include=True>>=
+figure = plt.figure()
+plt.plot(x,np.cos(x))
+@

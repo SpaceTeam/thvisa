@@ -10,9 +10,6 @@ https://github.com/mpastell/Pweave
 which is superior in any way, and the way forward
 
 """
-
-
-
 import matplotlib.pyplot as plt
 import pdf_helper as pdf
 import numpy as np
@@ -31,7 +28,7 @@ def myprint(*args):
 	
 
 
-
+# prep x-axis
 x = np.arange(0,2*np.pi,np.pi/16)
 
 
