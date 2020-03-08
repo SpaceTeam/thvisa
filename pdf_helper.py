@@ -4,6 +4,11 @@
 Created 2018
 
 @author: thirschbuechler
+
+This is a really minimal pdf creator, if you want to temporarily avoid
+https://github.com/mpastell/Pweave
+which is superior in any way, and the way forward
+
 """
 
 import os
