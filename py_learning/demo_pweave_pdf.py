@@ -40,10 +40,14 @@ print("the error will just be printed into the output doc")
 # Weave a pandoc document with default options
 #pweave.weave('FIR_designp.pmd', doctype = "pandoc") # makes markdown, works
 #pweave.weave('FIR_designp.pmd', doctype = "md2html") # makes html, works
-pweave.weave('pywave_md.mdw', doctype = "md2html") # makes html, works
-#pweave.weave('pywave_md.pmd', doctype = "md2html")# makes html, works
+#pweave.weave('pywave_md.mdw', doctype = "md2html") # makes html, works
+pweave.weave('pywave_md.pmd', doctype = "md2html")# makes html, works
 
 pdfkit.from_file('pywave_md.html', 'pywave_md_pdfkit.pdf') 
-# NOTE: this seems to use online-resources,
-# because it complains some times about not being able to access some cloudflare subpage
+
+# NOTE: this seems to use online-resources, outdated wkhtmltopdf to be precise
 # (pweave File failed to load: https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/jax/input/LaTeX/config.js)
+# https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html
+
+# toDo: try weasyprint
+# https://weasyprint.readthedocs.io/en/stable/tutorial.html
