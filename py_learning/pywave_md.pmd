@@ -5,7 +5,6 @@
 ```python, echo=False
 # note: the chunk option settings [True, False] are case sensitive
 import matplotlib.pyplot as plt
-import pdf_helper as pdf
 import numpy as np
 import os
 
@@ -45,7 +44,7 @@ First figure shows a sine
 
 ```python, echo=False, include=True
 plt.figure()
-plt.plot(x,np.sin(x)) # can happen after figure ref is added to list figs
+p = plt.plot(x,np.sin(x)); # can happen after figure ref is added to list figs, put into variable to suppress "matplotlib.lines.Line2D" - text in output
 # plt.show() # interrupts program flow and waits for user to close figure
 ```
 
@@ -55,5 +54,5 @@ Second figure shows a cosine
 
 ```python, echo=False, include=True
 figure = plt.figure()
-plt.plot(x,np.cos(x))
+p = plt.plot(x,np.cos(x))
 ```

@@ -18,6 +18,11 @@ https://github.com/mpastell/Pweave
 	http://mpastell.com/pweave/formats.html
 
 
+Anaconda pweave install:
+conda install -c conda-forge pweave
+
+anaconda pdfkit install failed
+
 pdf creation :
 	https://www.geeksforgeeks.org/python-convert-html-pdf/
 	--> todo: does "updateformat(pdf) work better?
