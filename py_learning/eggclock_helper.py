@@ -8,6 +8,8 @@ Created 2017/2018
 
 import sys
 import signal, time
+
+sys.path.append("..") # add topleveldir to import paths
 import ucmd_helper as ucmd # import mysleep?
 
 # ISSUES #
