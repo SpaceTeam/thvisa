@@ -77,10 +77,13 @@ class spd3303c(thv.thInstr):
        
         # Could work, but could also be the case, that i need to convert the
         # hex-value which was returned, manually ( bin() )
-        num = self.do_query_string('*SYSTem:STATus?')
+        hex_num = self.do_query_string('SYSTem:STATus?')
+        self.myprint(hex_num)
+        num = f'{hex_num:0>16b}'
         self.myprint(num)
         # Channel Power Switches (On or Off)
-        switch_ch1, switch_ch2 = 'off'
+        switch_ch1 = 'off'
+        switch_ch2 = 'off'
         if(self.access_binarydigit(num,4)):
             switch_ch1 = 'on'
         if(self.access_binarydigit(num,5)):
@@ -220,9 +223,9 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(2))))
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         #psu.enable(ch=1)
-        time.sleep(3)
+        
         psu.check_systemstatus()
-        time.sleep(3)
+        
         #psu.set(ch=1, v_set=5, c_max=0.1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
