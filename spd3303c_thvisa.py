@@ -42,7 +42,6 @@ class spd3303c(thv.thInstr):
         # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(spd3303c, self).__init__(myprint=myprint, instrname=instrname, qdelay=qdelay, wdelay = 0.1)
         self.alwayscheck=False # screw error checking every time, now we need wdelay=100ms instead of 10ms but are overall faster
-
         # define output state, should be off, but nonetheless:
         # can't do here, no handle open! make one with "with" or omit
         # self.disable(1)
@@ -78,8 +77,8 @@ class spd3303c(thv.thInstr):
        
         # Could work, but could also be the case, that i need to convert the
         # hex-value which was returned, manually ( bin() )
-        num = self.do_query_ieee_block('*SYSTem: STATus?')
-
+        num = self.do_query_string('*SYSTem:STATus?')
+        self.myprint(num)
         # Channel Power Switches (On or Off)
         switch_ch1, switch_ch2 = 'off'
         if(self.access_binarydigit(num,4)):
@@ -145,9 +144,9 @@ class spd3303c(thv.thInstr):
     def output(self, ch, state=float("nan")):
         
         self.myprint('PSU channel {}:'.format(str(ch))) # ch = channel 
-        #self.do_command("*unlock") # output can only be changed in unlocked state
+        self.do_command("*unlock") # output can only be changed in unlocked state
         self.do_command('OUTP CH{}, {}'.format(str(ch), thv.statedict[state]))
-        #self.do_command("*lock")
+        self.do_command("*lock")
                 
         # todo: $use eggtimer / mysleep to avoid UI freeze
         #time.sleep(self.settletime) # wait for off-transient
@@ -204,25 +203,27 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     #psu = spd3303c("SPD",qdelay=1,myprint=print) # no, use with-context!
     with spd3303c() as psu:
         print("Entered successfully !")
-        psu.set_settletime(1)
+        #psu.set_settletime(1)
         print(print("Step 1 - done"))
         #psu.disable(1)
         print("Step 2 - done")
         #psu.disable(2)
         print("Step 3 - done")
         #psu.test_undoc_cmd()
-        #print(psu.do_query_string("MEASure:VOLTage? CH{}".format(str(1))))
+        print(psu.do_query_string("MEASure:VOLTage? CH{}".format(str(1))))
         #time.sleep(1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         print("major range change to make it kachunck")
-        psu.set(ch=1, v_set=10, c_max=0.1)
+        #psu.set(ch=1, v_set=8, c_max=0.1)
         #print(psu.do_query_string("MEASure:VOLTage? CH{}".format(str(1))))
-        psu.set(ch=2, v_set=7, c_max=0.1)
+        #psu.set(ch=2, v_set=8, c_max=0.1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(2))))
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         #psu.enable(ch=1)
-        
-        #psu.set(ch=1, v_set=10, c_max=0.1)
+        time.sleep(3)
+        psu.check_systemstatus()
+        time.sleep(3)
+        #psu.set(ch=1, v_set=5, c_max=0.1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
 
