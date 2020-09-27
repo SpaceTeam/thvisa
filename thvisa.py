@@ -38,7 +38,7 @@ class thInstr(object):
     instrnamedef = 0
     qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
     # Initializer / Instance Attributes
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay=0):
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay = 0):
 
         self.myprint=myprint
         self.myinstruments = []

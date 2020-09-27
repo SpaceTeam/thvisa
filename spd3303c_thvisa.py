@@ -32,7 +32,7 @@ class spd3303c(thv.thInstr):
     
     
     # ----- Instrument Setup ----- #
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, settletime=1):
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, settletime = 1):
         self.qdelay=qdelay
         self.myprint=myprint
         self.instrname=instrname
@@ -215,9 +215,9 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
         #time.sleep(1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         print("major range change to make it kachunck")
-        psu.set(ch=1, v_set=5, c_max=0.1)
+        psu.set(ch=1, v_set=10, c_max=0.1)
         #print(psu.do_query_string("MEASure:VOLTage? CH{}".format(str(1))))
-        psu.set(ch=2, v_set=5, c_max=0.1)
+        psu.set(ch=2, v_set=7, c_max=0.1)
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(2))))
         #print(psu.do_query_string("Measure:Voltage? CH{}".format(str(1))))
         #psu.enable(ch=1)
