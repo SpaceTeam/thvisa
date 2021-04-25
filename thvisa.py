@@ -38,7 +38,7 @@ class thInstr(object):
     instrnamedef = 0
     qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
     # Initializer / Instance Attributes
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay=0):
+    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay = 0):
 
         self.myprint=myprint
         self.myinstruments = []
@@ -100,7 +100,7 @@ class thInstr(object):
                    self.myprint("VisaError:  Unexpected error:", sys.exc_info()[0])
                    self.myprint("maybe resource busy , i.e. increase query_delay or unplug-replug"+"\n"+"or already taken by other/older session, if you didn't use a \"with\"-context")
                    self.exception()
-
+               
 
         # intendation level: __init__
         # now, if name specified, return thing
@@ -233,7 +233,8 @@ class thInstr(object):
                 self.check_instrument_errors(query)
                 
             return result
-        
+        except ValueError:
+            self.print("Value Error has occured")
         except Exception as e:
             self.exception(e)
 
