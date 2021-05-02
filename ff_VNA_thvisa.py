@@ -82,7 +82,7 @@ class VNA(ff.fieldfox):
 
         self.do_command("CALC:PAR"+str(trace)+":SEL")
 
-        trace_csv = self.do_query_string("CALC:DATA:FDATa?") # correct form was in programming examples not manual.. grumble grumble
+        trace_csv = self.do_query_string("CALC:DATA:FDATa?") # fdata - formatted display (mag only)
         trace_data = trace_csv.split(",")
         
         if save_trace:
@@ -94,6 +94,7 @@ class VNA(ff.fieldfox):
 
 
     def get_trace(self, trace=1,save_trace=0):
+
         self.do_command("calculate:format polar") # polar gives mag+phase
         '''
         % Trace 1 to measurement of S21 and select that measurement as active
@@ -104,9 +105,12 @@ class VNA(ff.fieldfox):
 
         self.do_command("CALC:PAR"+str(trace)+":SEL")
 
-        ff_csv = self.do_query_string("CALC:DATA:FDATa?") # correct form was in programming examples not manual.. grumble grumble
+        #ff_csv = self.do_query_string("CALC:DATA:FDATa?") 
+        # p302 - format:data
+        # p200 - calc:data:fdata: undefined for polar and smith!?! - fdata - formatted display (mag only)
+        ff_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
                         
-        return ff_csv.split(",")
+        return ff_csv
 
     # legacy function for MAG-only (default formatting)
     def collect_traces_mag(self):
@@ -141,10 +145,16 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
 
     #myvna.do_sweeps()
     myvna.make_abszissa()
-    #myvna.collect_traces_mag()
+    myvna.collect_traces_mag()
+    m=myvna.traces.copy()
     #myvna.plot_mag()
     
     myvna.traces=[]
     myvna.collect_traces()
-    a = pd.DataFrame(myvna.traces) # works, polar switch as well, but no imag!=
+    t=myvna.traces # this works, since 2002 long per trace, do a ndarray reshape or use pd
+    #from io import StringIO
+    #b=[]
+    #for trace in t:
+    #    b.append(pd.read_csv(StringIO(trace),sep=",")    )
+    
 
