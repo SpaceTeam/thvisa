@@ -45,8 +45,8 @@ class thInstr(object):
         self.instr = 0
         self.instrname = instrname
         self.qdelay = qdelay # initial query delay
-        self.wdelay = wdelay # write quer delay
-        self.alwayscheck=True
+        self.wdelay = wdelay # write query delay between request and (error) readout (if alwayscheck), in any case after getting result
+        self.alwayscheck=True # see above
         blacklist=["ASRL"] # asynchronous serial/parallel which fails on *IDN?
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
