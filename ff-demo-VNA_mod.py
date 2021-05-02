@@ -7,7 +7,7 @@ Created on Sat Apr 24 13:58:10 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pyvisa as visa#same as import visa apparently
+import pyvisa as visa
 import pandas as pd
 
 
@@ -118,7 +118,7 @@ if __name__ == '__main__': # test if called as executable, not as library
         #myff.write("CALCulate:PARameter4:DEFine S12")
         myff.write("CALCulate:PARameter1:DEFine S21")
     else:
-        myff.write("average:clear")
+        myff.write("average:clear") # reset avg
 
     
     ## read msr setup ##

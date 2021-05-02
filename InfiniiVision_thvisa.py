@@ -24,19 +24,19 @@ class InfiniiVision(thv.thInstr):
     qdelaydef = 0.5
         
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
+        ## set defaults or overrides as given to init() ##
         self.timeout = 15000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout"
-        self.instrname=instrname # the defaults no't be used other than to become properties
+        self.instrname=instrname 
         self.myprint=myprint
         self.qdelay=qdelay
-        self.exceptionhappened=0 # used somewhere?
         
-        # call parent init #
-        # the righthand stuff has to be "self." properties and unusually, has no ".self" prefix
+        ## call parent init ##
+        # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(InfiniiVision, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) 
         self.reset()
     
     
-        # other common properties #
+        ## other common properties ##
         self.acq_type_dict = {
             0 : "NORMal",
             1 : "PEAK",
