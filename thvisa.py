@@ -47,6 +47,7 @@ class thInstr(object):
         self.qdelay = qdelay # initial query delay
         self.wdelay = wdelay # write quer delay
         self.alwayscheck=True
+        blacklist=["ASRL"] # asynchronous serial/parallel which fails on *IDN?
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
@@ -61,10 +62,22 @@ class thInstr(object):
         # for some reason, it's lucky to query the keysight oszi first...
 
         self.myprint("querying instruments..")
+        
         if len(instruments)<0:
             self.myprint("no instruments: sad puppy.")
-        else:
-            self.myprint("say hello")
+            
+        else:   # blacklisting & detection
+            instruments = list(instruments)
+            instruments2=instruments.copy()
+            self.myprint("blacklisting bad handles..")
+            # clean list
+            for instrument in instruments:        
+                if any(b in instrument for b in blacklist): # check substring
+                    instruments2.remove(instrument)
+                        
+            instruments=instruments2
+            
+            self.myprint("say hello, instruments!")
             for instrument in instruments:
                 self.myprint(instrument)
                 try:
@@ -170,7 +183,7 @@ class thInstr(object):
 
     # if needs some mod after init routine
     def setprint(self, function): # to redirect print to pdf, print, etc.
-    	self.myprint=function
+        self.myprint=function
 
     # =========================================================
     # Send a command and check for errors:
