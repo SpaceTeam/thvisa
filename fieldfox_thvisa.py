@@ -9,6 +9,7 @@ Created on Sun May 02 2021
 """
 
 import thvisa as thv
+import time
 
 
 class fieldfox(thv.thInstr):
@@ -60,13 +61,21 @@ class fieldfox(thv.thInstr):
             while int(Error)!=0:
                 self.myprint ("Error #: " + ErrorList[0])
                 self.myprint ("Error Description: " + ErrorList[1])
-                self.myError.append(ErrorList[0])
-                self.myError.append(ErrorList[1])
+                myError.append(ErrorList[0])
+                myError.append(ErrorList[1])
                 ErrorList = self.instr.query("SYST:ERR?").split(',')
                 Error = ErrorList[0]
                 myError = list(myError)
         return myError
 
+    def do_command(self, cmd):
+        #super(fieldfox, self).do_command(cmd)
+        #return self.instr.write("*OPC?")
+        
+        self.instr.write(cmd+";*OPC?")
+        #self.instr.write(cmd)
+        #time.sleep(3)
+        return self.instr.read()
 
     
     # $ test invinivision stuff
@@ -100,7 +109,10 @@ class fieldfox(thv.thInstr):
         
 
     def ff_title(self, title):
-        self.do_command("DISPlay:TITLe:DATA "+title)
+        cmd=str("DISPlay:TITLe:DATA \'"+title+"\'")
+        print(cmd)
+        self.do_command(cmd)
+        self.do_command("disp:TITL 1")
 
 
 
@@ -110,5 +122,6 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     myff = fieldfox() # read IDN
     myff.errcheck() # because why not
 
-    #myff.ff_title("testing general fieldfox class")
+    myff.ff_title("..testing general fieldfox class..")
+    
  
