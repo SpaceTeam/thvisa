@@ -7,8 +7,7 @@ Created on Sun May 02 2021
 
 @author: thirschbuechler
 """
-import time
-import struct
+
 import thvisa as thv
 
 
@@ -16,7 +15,7 @@ class fieldfox(thv.thInstr):
 
     # overwrite class inherited defaults
     myprintdef = print
-    instrnamedef = "N9914A"
+    instrnamedef = "TCPIP::K-N9914A-71670.local::inst0::INSTR" # full name since no autodetection 
     qdelaydef = 0.5
         
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
@@ -51,18 +50,18 @@ class fieldfox(thv.thInstr):
 
     # reset the instrument to the known default setup #
     # same as check_instrument_errors()?
-    def errcheck():
+    def errcheck(self):
         myError = []
         ErrorList = self.instr.query("SYST:ERR?").split(',')
         Error = ErrorList[0]
         if int(Error) == 0:
-            myprint ("+0, No Error!")
+            self.myprint ("+0, No Error!")
         else:
             while int(Error)!=0:
-                myprint ("Error #: " + ErrorList[0])
-                myprint ("Error Description: " + ErrorList[1])
-                myError.append(ErrorList[0])
-                myError.append(ErrorList[1])
+                self.myprint ("Error #: " + ErrorList[0])
+                self.myprint ("Error Description: " + ErrorList[1])
+                self.myError.append(ErrorList[0])
+                self.myError.append(ErrorList[1])
                 ErrorList = self.instr.query("SYST:ERR?").split(',')
                 Error = ErrorList[0]
                 myError = list(myError)
@@ -111,5 +110,5 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     myff = fieldfox() # read IDN
     myff.errcheck() # because why not
 
-    myff.ff_title("testing general fieldfox class")
+    #myff.ff_title("testing general fieldfox class")
  

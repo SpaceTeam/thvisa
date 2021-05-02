@@ -35,7 +35,7 @@ class thInstr(object):
 
     # default attributes for child-classes
     myprintdef = printdummy
-    instrnamedef = 0
+    instrnamedef = None
     qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
     # Initializer / Instance Attributes
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay = 0):
@@ -66,7 +66,9 @@ class thInstr(object):
         if len(instruments)<0:
             self.myprint("no instruments: sad puppy.")
             
-        else:   # blacklisting & detection
+        else:   ## blacklisting & detection ##
+        
+            # blacklisting #
             instruments = list(instruments)
             instruments2=instruments.copy()
             self.myprint("blacklisting bad handles..")
@@ -76,6 +78,12 @@ class thInstr(object):
                     instruments2.remove(instrument)
                         
             instruments=instruments2
+            
+            # manually add LAN instr if specified
+            if instrname!=None:
+                if ("TCPIP" in instrname):
+                    instruments.append(instrname)
+       
             
             self.myprint("say hello, instruments!")
             for instrument in instruments:
