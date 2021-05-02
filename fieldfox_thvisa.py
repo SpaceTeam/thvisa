@@ -30,6 +30,8 @@ class fieldfox(thv.thInstr):
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(fieldfox, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) 
         
+        
+        self.do_command("*CLS")#clear any old errors
         #self.reset() dependent on application - do in subclass or actual script
     
     
@@ -68,13 +70,16 @@ class fieldfox(thv.thInstr):
                 myError = list(myError)
         return myError
 
-    def do_command(self, cmd):
+    def do_command(self, cmd, qdelay=None):
+        if qdelay==None:
+            qdelay=self.qdelay # self undefined above
+            
         #super(fieldfox, self).do_command(cmd)
         #return self.instr.write("*OPC?")
         
         self.instr.write(cmd+";*OPC?")
         #self.instr.write(cmd)
-        #time.sleep(3)
+        time.sleep(qdelay)
         return self.instr.read()
 
     

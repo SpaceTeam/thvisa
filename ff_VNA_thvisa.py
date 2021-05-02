@@ -61,7 +61,7 @@ class VNA(ff.fieldfox):
         
         self.myprint("aquiring data "+str(self.avgs)+" times, acc. to avg")
         for i in range(self.avgs): # have to manually trigger each run for the averaging..
-            ret = self.do_query_string("INIT:IMM")
+            ret = self.do_command("INIT:IMM",qdelay=5) # $$ WHY DO I NEED A DELAY HERE BUT IN ff_demo-vna-mod.py not
             self.myprint("Single Trigger complete, *OPC? returned : " + ret)
 
 
@@ -93,7 +93,7 @@ class VNA(ff.fieldfox):
         return trace_data
 
 
-    def get_trace_(self, trace=1,save_trace=0):
+    def get_trace(self, trace=1,save_trace=0):
         self.do_command("calculate:format polar") # polar gives mag+phase
         '''
         % Trace 1 to measurement of S21 and select that measurement as active
@@ -141,6 +141,10 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
 
     #myvna.do_sweeps()
     myvna.make_abszissa()
-    myvna.collect_traces_mag()
-    myvna.plot_mag()
+    #myvna.collect_traces_mag()
+    #myvna.plot_mag()
+    
+    myvna.traces=[]
+    myvna.collect_traces()
+    a = pd.DataFrame(myvna.traces) # works, polar switch as well, but no imag!=
 
