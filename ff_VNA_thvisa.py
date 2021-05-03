@@ -12,6 +12,7 @@ import fieldfox_thvisa as ff # import common functions
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import pd.DataFrame as df
 
 # ToDo: 
 #- implement s2p transfer
@@ -109,8 +110,10 @@ class VNA(ff.fieldfox):
         # p302 - format:data
         # p200 - calc:data:fdata: undefined for polar and smith!?! - fdata - formatted display (mag only)
         ff_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
-                        
-        return ff_csv
+        trace_data = np.array(trace_csv.split(","))
+        trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
+        
+        return trace_data # k x 2 matrix
 
 
     # legacy function for MAG-only (default formatting)
@@ -152,17 +155,8 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     
     myvna.traces=[]
     myvna.collect_traces()
-    t=myvna.traces # this works, since 2002 long per trace, do a ndarray reshape or use pd
-    #from io import StringIO
-    #b=[]
-    #for trace in t:
-    #    b.append(pd.read_csv(StringIO(trace),sep=",")    )
 
-    df3=pd.DataFrame(myvna.abszissa)
-    
-    for trace in t:
-        stuff=trace.split(",") #now list
-        arr = np.array(stuff)
-        b=np.reshape(arr,(-1,2)) # now Ai Bi sit in same row (therefore all As & Bs in respective columns)
-        df2=pd.DataFrame(b) # make sheet
-        df3=pd.concat([df3, df2], axis=1) # concatenate sheets
+    # todo: test and put into class
+    # todo: look at output, probably not yet formatted in dB and degr (as a s2p should)
+    s2p_frame = pd.concat([df(trace) for trace in myvna.traces].insert(0,df(myvna.abszissa)), axis=1) # should make dataframes, concat them and make table
+    s2p_frame.to_csv("aa.s2p", index=False) # abszissa is column not index so ignore index
