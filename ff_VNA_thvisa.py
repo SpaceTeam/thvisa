@@ -95,7 +95,7 @@ class VNA(ff.fieldfox):
 
     def get_trace(self, trace=1,save_trace=0):
 
-        self.do_command("calculate:format polar") # polar gives mag+phase
+        self.do_command("calculate:format polar") # polar gives mag+phase of Gamma (probably linear)
         '''
         % Trace 1 to measurement of S21 and select that measurement as active
         fprintf(fieldFox,'CALC:PAR1:DEF S21;SEL\n') ## does both calculate:paramater1:define s21 and calc:par1:sel
@@ -111,6 +111,7 @@ class VNA(ff.fieldfox):
         ff_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
                         
         return ff_csv
+
 
     # legacy function for MAG-only (default formatting)
     def collect_traces_mag(self):
@@ -156,5 +157,12 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     #b=[]
     #for trace in t:
     #    b.append(pd.read_csv(StringIO(trace),sep=",")    )
-    
 
+    df3=pd.DataFrame(myvna.abszissa)
+    
+    for trace in t:
+        stuff=trace.split(",") #now list
+        arr = np.array(stuff)
+        b=np.reshape(arr,(-1,2)) # now Ai Bi sit in same row (therefore all As & Bs in respective columns)
+        df2=pd.DataFrame(b) # make sheet
+        df3=pd.concat([df3, df2], axis=1) # concatenate sheets
