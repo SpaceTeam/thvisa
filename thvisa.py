@@ -36,16 +36,20 @@ class thInstr(object):
     # default attributes for child-classes
     myprintdef = printdummy
     instrnamedef = None
-    qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
+
     # Initializer / Instance Attributes
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay = 0):
+    def __init__(self, instrname = instrnamedef, qdelay = 0, myprint = myprintdef, wdelay = 0, timeout=None):
 
         self.myprint=myprint
         self.myinstruments = []
         self.instr = 0
         self.instrname = instrname
+        
+        # time.sleep variables
         self.qdelay = qdelay # initial query delay
         self.wdelay = wdelay # write query delay between request and (error) readout (if alwayscheck), in any case after getting result
+        # timeout : no property, since directly given to visa - if aquisition/a response takes longer the instr gets disconnected by visa itself
+        
         self.alwayscheck=True # see above
         blacklist=["ASRL"] # asynchronous serial/parallel which fails on *IDN?
         
@@ -127,6 +131,8 @@ class thInstr(object):
         # now, if name specified, return thing
         if self.instrname:
             self.instr=(self.getinstrument(instrname, qdelay=qdelay))
+            if timeout!=None:
+                self.instr.timeout = timeout # in ms
             self.instrname=instrname
         else:
             self.myprint("you made no wish, so you aren't gettin' any!")#$do something?

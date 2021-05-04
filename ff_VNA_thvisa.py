@@ -14,8 +14,6 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame as df
 
-# ToDo: 
-#- implement s2p transfer
 
 class VNA(ff.fieldfox):
 
@@ -83,7 +81,7 @@ class VNA(ff.fieldfox):
         
         self.myprint("aquiring data "+str(self.avgs)+" times, acc. to avg")
         for i in range(self.avgs): # have to manually trigger each run for the averaging..
-            ret = self.do_command("INIT:IMM",qdelay=5) # $$ WHY DO I NEED A DELAY HERE BUT IN ff_demo-vna-mod.py not
+            ret = self.do_command("INIT:IMM")  # opc baked into do_command
             self.myprint("Single Trigger complete, *OPC? returned : " + ret)
 
 
@@ -158,9 +156,7 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
 
     myvna.ff_title("..testing VNA fieldfox class..")
 
-    #myvna.do_sweeps()
+    myvna.do_sweeps()
     
     myvna.collect_traces()
-
-
-    myvna.save_csv("aa.s2p")
+    myvna.save_csv("bb.s2p")

@@ -28,7 +28,7 @@ class fieldfox(thv.thInstr):
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
-        super(fieldfox, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) 
+        super(fieldfox, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay, timeout=10000) 
         
         
         self.do_command("*CLS")#clear any old errors
