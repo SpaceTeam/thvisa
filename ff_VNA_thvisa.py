@@ -12,7 +12,7 @@ import fieldfox_thvisa as ff # import common functions
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import pd.DataFrame as df
+from pandas import DataFrame as df
 
 # ToDo: 
 #- implement s2p transfer
@@ -40,6 +40,23 @@ class VNA(ff.fieldfox):
         ## definitions ##
         self.traces = []
         self.abszissa = []
+        self.avgs=1 # default since always used
+        
+
+        
+        self.setup_done = False
+
+
+    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
+        super(VNA, self).__exit__( exc_type, exc_value, tb)
+
+    def setup(self):
+        # Preset the FieldFox  
+        self.do_command("SYST:PRES")#"SYST:PRES;*OPC?" # docommand does opc inherited by fieldfox mainclass
+        # Set mode to VNA   
+        self.do_command("INST:SEL 'NA'")
+        
+                
         # abszissa
         self.numPoints = 1001
         self.startFreq = 2.4E9
@@ -48,11 +65,17 @@ class VNA(ff.fieldfox):
         self.ifbw=1E3
         self.avgs=1
         self.sourcepower = "high" # "max" - bad, since ADC overload in certain ranges on S11=0dB as well as in CAL - wtf
-
-
-    def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        super(VNA, self).__exit__( exc_type, exc_value, tb)
-
+        
+        
+        ## msr setup ##
+        self.do_command("SENS:SWE:POIN " + str(self.numPoints))
+        self.do_command("SENS:FREQ:START " + str(self.startFreq))
+        self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
+        self.do_command("BWID " + str(self.ifbw))
+        self.do_command("source:power " + str(self.sourcepower))
+        self.do_command("AVER:COUNt " + str(self.avgs))
+        
+        self.setup_done = True
 
     # enable trigger and get data into instr memory#
     def do_sweeps(self, continous="off"):
@@ -67,6 +90,12 @@ class VNA(ff.fieldfox):
 
 
     def make_abszissa(self):
+        if not self.setup_done:
+            self.numPoints=self.do_query_string("SENS:SWE:POIN?")
+            self.startFreq=self.do_query_string("SENS:FREQ:START?")
+            self.stopFreq=self.do_query_string("SENS:FREQ:STOP?")
+            
+        
         self.abszissa = np.linspace(float(self.startFreq),float(self.stopFreq),int(self.numPoints)) #SCPI "SENSe:X?" probably unsupported
         # however Read X-axis values possible via-     [:SENSe]:FREQuency:DATA?
         # Assert a single trigger and wait for trigger complete via *OPC? output of a 1
@@ -110,7 +139,7 @@ class VNA(ff.fieldfox):
         # p302 - format:data
         # p200 - calc:data:fdata: undefined for polar and smith!?! - fdata - formatted display (mag only)
         trace_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
-        trace_data = np.array(trace_csv.split(","))
+        trace_data = np.array(trace_csv.split(",")).astype(float)
         trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
         
         return trace_data # k x 2 matrix
@@ -149,8 +178,8 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
 
     #myvna.do_sweeps()
     myvna.make_abszissa()
-    myvna.collect_traces_mag()
-    m=myvna.traces.copy()
+    #myvna.collect_traces_mag()
+    #m=myvna.traces.copy()
     #myvna.plot_mag()
     
     myvna.traces=[]
@@ -158,5 +187,26 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
 
     # todo: test and put into class
     # todo: look at output, probably not yet formatted in dB and degr (as a s2p should)
-    s2p_frame = pd.concat([df(trace) for trace in myvna.traces].insert(0,df(myvna.abszissa)), axis=1) # should make dataframes, concat them and make table
-    s2p_frame.to_csv("aa.s2p", index=False) # abszissa is column not index so ignore index
+    
+    s2p_data = [df(myvna.abszissa)]
+    for trace in myvna.traces:
+        # RE = trace[:,0]
+        # IM = trace[:,1]
+        S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
+        angle = 180/np.pi * np.arctan(trace[:,1] / trace[:,0])
+        s2p_data.append(df(S_dB))
+        s2p_data.append(df(angle))
+        
+    
+        
+        
+    #myvna.traces.insert(0,myvna.abszissa)
+    # s2p_frame = pd.concat([df(trace) for trace in myvna.traces], axis=1) # should make dataframes, concat them and make table
+    s2p_frame = pd.concat(s2p_data, axis=1)
+    s2p_frame.to_csv("aa.s2p", index=False, sep ='\t', header=False) # abszissa is column not index so ignore index, header is columname overwrite
+
+
+    # real imag NOT s2p:
+    #myvna.traces.insert(0,myvna.abszissa)
+    #s2p_frame = pd.concat([df(trace) for trace in myvna.traces], axis=1) # should make dataframes, concat them and make table
+    #s2p_frame.to_csv("aa.s2p", index=False) # abszissa is column not index so ignore index
