@@ -109,7 +109,7 @@ class VNA(ff.fieldfox):
         #ff_csv = self.do_query_string("CALC:DATA:FDATa?") 
         # p302 - format:data
         # p200 - calc:data:fdata: undefined for polar and smith!?! - fdata - formatted display (mag only)
-        ff_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
+        trace_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
         trace_data = np.array(trace_csv.split(","))
         trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
         
