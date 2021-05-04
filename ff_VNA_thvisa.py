@@ -9,10 +9,11 @@ Created on Sun May 02 2021
 """
 
 import fieldfox_thvisa as ff # import common functions
-import numpy as np
+import numpy as np #math
 #import matplotlib.pyplot as plt
-import pandas as pd
+import pandas as pd #tables
 from pandas import DataFrame as df
+from time import perf_counter
 
 
 class VNA(ff.fieldfox):
@@ -20,9 +21,9 @@ class VNA(ff.fieldfox):
     # overwrite class inherited defaults
     myprintdef = print
     instrnamedef = "TCPIP::K-N9914A-71670.local::inst0::INSTR" # full name since no autodetection 
-    qdelaydef = 0.5 # initial query delay
+    
         
-    def __init__(self, instrname = instrnamedef, myprint = myprintdef, qdelay = qdelaydef):
+    def __init__(self, instrname = instrnamedef, myprint = myprintdef, qdelay = 0, wdelay=0):
          ## set defaults or overrides as given to init() ##
         #super(VNA, self).super(fieldfox, self).instr.timeout = 10000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout" $$ does this really go here or into instr.timeout somehow..
         self.instrname=instrname 
@@ -151,12 +152,20 @@ class VNA(ff.fieldfox):
 #### test this library using semi Unit Testing ####
 if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
     
-    myvna = VNA() # read IDN
-    myvna.errcheck() # because why not
-
-    myvna.ff_title("..testing VNA fieldfox class..")
-
-    myvna.do_sweeps()
+    with VNA() as myvna:
+        myvna.ff_title("Hello")
+        myvna.errcheck() # because why not
     
-    myvna.collect_traces()
-    myvna.save_csv("bb.s2p")
+        myvna.ff_title("..testing VNA fieldfox class..")
+        
+        t1 = perf_counter() 
+        myvna.do_sweeps()
+        t2 = perf_counter()
+
+        myvna.collect_traces()
+        myvna.save_csv("bb.s2p")
+        t3 = perf_counter()
+        
+        print("took {:.2f}s for sweeping, {:.2f}s for fetch 'n save".format(t2-t1,t3-t2))
+        
+        myvna.ff_title()

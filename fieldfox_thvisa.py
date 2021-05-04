@@ -44,9 +44,9 @@ class fieldfox(thv.thInstr):
     # frontpanel input access control
     def lock(self,state=1):
         if state:
-            self.do_command("INSTR:GTR")
+            self.do_command("INST:GTR")
         else:
-            self.do_command("INSTR:GTL")
+            self.do_command("INST:GTL")
     def unlock(self, state=1):
         self.lock(not state)
 
@@ -113,11 +113,12 @@ class fieldfox(thv.thInstr):
         #pass
         
 
-    def ff_title(self, title):
-        cmd=str("DISPlay:TITLe:DATA \'"+title+"\'")
-        print(cmd)
-        self.do_command(cmd)
-        self.do_command("disp:TITL 1")
+    def ff_title(self, title=None):
+        if title!=None:
+            self.do_command(str("DISPlay:TITLe:DATA \'"+title+"\'"))
+            self.do_command("disp:TITL 1")
+        else:
+            self.do_command("disp:TITL 0")
 
 
 
@@ -128,5 +129,7 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     myff.errcheck() # because why not
 
     myff.ff_title("..testing general fieldfox class..")
+    
+    
     
  

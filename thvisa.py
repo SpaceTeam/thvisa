@@ -140,12 +140,12 @@ class thInstr(object):
 
     # end __init__
 
-    def __del__(self):
+    def __del__(self,text="del"):
         #self.instr.close() # shut down # gets called by __del__ of rm
         # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
         if (self.instr):
             self.instr.close()
-            self.myprint("say goodbye, instrument {}!".format(self.instrname))
+            self.myprint("say goodbye, {}! by ".format(self.instrname) +str(text))
 
 
     def exit(self): # shorthand to avoid sys.exit()
@@ -158,7 +158,7 @@ class thInstr(object):
     # misguided past understanding: this gets called on whith-exit #
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.myprint("closing instr. session..")
-        self.__del__() # kill, kill!
+        self.__del__("exit") # kill, kill!
         if not self.instr: # if the instr was closed already
             self.myprint("instr handle invalid in del routine, exiting...")
             sys.exit(0)
