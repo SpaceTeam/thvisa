@@ -10,7 +10,7 @@ Created on Sun May 02 2021
 
 import fieldfox_thvisa as ff # import common functions
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 from pandas import DataFrame as df
 
@@ -33,22 +33,19 @@ class VNA(ff.fieldfox):
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
-        super(VNA, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) 
-
-
+        super(VNA, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
 
         ## definitions ##
         self.traces = []
-        self.abszissa = []
+        self.abscissa = []
         self.avgs=1 # default since always used
-        
 
-        
         self.setup_done = False
 
 
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        super(VNA, self).__exit__( exc_type, exc_value, tb)
+        super(VNA, self).__exit__( exc_type, exc_value, tb) # call parent
+
 
     def setup(self):
         # Preset the FieldFox  
@@ -57,7 +54,7 @@ class VNA(ff.fieldfox):
         self.do_command("INST:SEL 'NA'")
         
                 
-        # abszissa
+        # abscissa
         self.numPoints = 1001
         self.startFreq = 2.4E9
         self.stopFreq = 2.5E9
@@ -77,7 +74,8 @@ class VNA(ff.fieldfox):
         
         self.setup_done = True
 
-    # enable trigger and get data into instr memory#
+
+    # enable trigger and get data into instr memory
     def do_sweeps(self, continous="off"):
         # Set trigger mode to hold for trigger synchronization
         #continous="off" # during measurement.. anyway
@@ -89,55 +87,34 @@ class VNA(ff.fieldfox):
             self.myprint("Single Trigger complete, *OPC? returned : " + ret)
 
 
-    def make_abszissa(self):
+    def make_abscissa(self):
         if not self.setup_done:
             self.numPoints=self.do_query_string("SENS:SWE:POIN?")
             self.startFreq=self.do_query_string("SENS:FREQ:START?")
             self.stopFreq=self.do_query_string("SENS:FREQ:STOP?")
             
+        # build
+        self.abscissa = np.linspace(float(self.startFreq),float(self.stopFreq),int(self.numPoints)) 
+        # notes
+            #SCPI "SENSe:X?" probably unsupported
+            # however Read X-axis values possible via-     [:SENSe]:FREQuency:DATA?
+
+
+    def get_trace(self, trace=1):
+        self.do_command("CALC:PAR"+str(trace)+":SEL") # select trace
+        smiths = [1,4]
         
-        self.abszissa = np.linspace(float(self.startFreq),float(self.stopFreq),int(self.numPoints)) #SCPI "SENSe:X?" probably unsupported
-        # however Read X-axis values possible via-     [:SENSe]:FREQuency:DATA?
-        # Assert a single trigger and wait for trigger complete via *OPC? output of a 1
-
-
-    def get_trace_mag(self, trace=1,save_trace=0):
-        self.do_command("calculate:format mlog") # default - magnitude log # calc:sel:format
-        '''
-        % Trace 1 to measurement of S21 and select that measurement as active
-        fprintf(fieldFox,'CALC:PAR1:DEF S21;SEL\n') ## does both calculate:paramater1:define s21 and calc:par1:sel
-        % Hold off for operation complete to ensure settings
-        fprintf(fieldFox,'*OPC?\n')
-        '''
-
-        self.do_command("CALC:PAR"+str(trace)+":SEL")
-
-        trace_csv = self.do_query_string("CALC:DATA:FDATa?") # fdata - formatted display (mag only)
-        trace_data = trace_csv.split(",")
+        if trace in smiths :
+            self.do_command("calculate:format smith") # pretty smith
+        else:
+            self.do_command("calculate:format polar") # polar gives mag+phase of Gamma (linear)
         
-        if save_trace:
-            a=pd.DataFrame(data={"f":self.abszissa, "Mag":trace_data})
-            a.to_csv("trace"+trace+".csv", index=False)
-
-
-        return trace_data
-
-
-    def get_trace(self, trace=1,save_trace=0):
-
-        self.do_command("calculate:format polar") # polar gives mag+phase of Gamma (probably linear)
-        '''
-        % Trace 1 to measurement of S21 and select that measurement as active
-        fprintf(fieldFox,'CALC:PAR1:DEF S21;SEL\n') ## does both calculate:paramater1:define s21 and calc:par1:sel
-        % Hold off for operation complete to ensure settings
-        fprintf(fieldFox,'*OPC?\n')
-        '''
-
-        self.do_command("CALC:PAR"+str(trace)+":SEL")
-
-        #ff_csv = self.do_query_string("CALC:DATA:FDATa?") 
+  
         # p302 - format:data
-        # p200 - calc:data:fdata: undefined for polar and smith!?! - fdata - formatted display (mag only)
+        # p200 - calc:data:fdata: undefined for polar and smith. fdata - formatted display (mag only)
+        # slight differences in decimals: aquisition - 
+        #                           search online manual for "Data Chain: Standard vs 8510"
+        #                           http://na.support.keysight.com/fieldfox/help/SupHelp/FieldFox.htm
         trace_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
         trace_data = np.array(trace_csv.split(",")).astype(float)
         trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
@@ -145,26 +122,31 @@ class VNA(ff.fieldfox):
         return trace_data # k x 2 matrix
 
 
-    # legacy function for MAG-only (default formatting)
-    def collect_traces_mag(self):
-        for i in [1,2,3,4]:
-            self.traces.append(self.get_trace_mag(trace=i))
-
-
     def collect_traces(self):
         for i in [1,2,3,4]:
             self.traces.append(self.get_trace(trace=i))
-
-    def plot_mag(self):
-        fig, ax = plt.subplots()
-        for trace in self.traces:
-            y = np.array(trace).astype(np.float)
-            ax.plot(self.abszissa,y)
-            #ax.set_title (title)
-            ax.set_xlabel("Frequency (Hz)")
-            ax.set_ylabel("Magnitude (dB)")
             
-        plt.show()
+        self.make_abscissa() #afterwards, to not prolong with aquisition if setup_done==True
+
+    
+    def save_csv(self,filename):
+        
+        s2p_data = [df(self.abscissa)] # initialize concatenation array
+        
+        for trace in self.traces:
+            # RE = trace[:,0]
+            # IM = trace[:,1]
+            S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
+            angle = 180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) #np.unwrap doesn't change anything; still different wrapping
+            s2p_data.append(df(S_dB))
+            s2p_data.append(df(angle))
+            
+        
+        s2p_frame = pd.concat(s2p_data, axis=1) # concat the concat array
+        s2p_frame.to_csv(filename, index=False, sep ='\t', header=False) # save
+        # notes:    abscissa is column not index so ignore index
+        #           header is columname overwrite
+    
 
 
 
@@ -177,36 +159,8 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
     myvna.ff_title("..testing VNA fieldfox class..")
 
     #myvna.do_sweeps()
-    myvna.make_abszissa()
-    #myvna.collect_traces_mag()
-    #m=myvna.traces.copy()
-    #myvna.plot_mag()
     
-    myvna.traces=[]
     myvna.collect_traces()
 
-    # todo: test and put into class
-    # todo: look at output, probably not yet formatted in dB and degr (as a s2p should)
-    
-    s2p_data = [df(myvna.abszissa)]
-    for trace in myvna.traces:
-        # RE = trace[:,0]
-        # IM = trace[:,1]
-        S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
-        angle = 180/np.pi * np.arctan(trace[:,1] / trace[:,0])
-        s2p_data.append(df(S_dB))
-        s2p_data.append(df(angle))
-        
-    
-        
-        
-    #myvna.traces.insert(0,myvna.abszissa)
-    # s2p_frame = pd.concat([df(trace) for trace in myvna.traces], axis=1) # should make dataframes, concat them and make table
-    s2p_frame = pd.concat(s2p_data, axis=1)
-    s2p_frame.to_csv("aa.s2p", index=False, sep ='\t', header=False) # abszissa is column not index so ignore index, header is columname overwrite
 
-
-    # real imag NOT s2p:
-    #myvna.traces.insert(0,myvna.abszissa)
-    #s2p_frame = pd.concat([df(trace) for trace in myvna.traces], axis=1) # should make dataframes, concat them and make table
-    #s2p_frame.to_csv("aa.s2p", index=False) # abszissa is column not index so ignore index
+    myvna.save_csv("aa.s2p")
