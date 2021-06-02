@@ -16,7 +16,8 @@ class fieldfox(thv.thInstr):
 
     # overwrite class inherited defaults
     myprintdef = print
-    instrnamedef = "TCPIP::K-N9914A-71670.local::inst0::INSTR" # full name since no autodetection 
+    instrnamedef = "TCPIP::K-N9914A-71670.local::inst0::INSTR" # TCPIP: full name since no autodetection 
+    instrnamedef = "USB0::10893::23576::MY57271670::0::INSTR" # USB: not fullname required but whatever
     qdelaydef = 0.5
         
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
@@ -37,7 +38,8 @@ class fieldfox(thv.thInstr):
     
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.unlock()
-        self.instr.clear()
+        if "TCPIP" in self.instrname:
+            self.instr.clear()#clear seems unsupported by USBtmc, wtf
         super(fieldfox, self).__exit__( exc_type, exc_value, tb) # self.instr.close() and so on
 
 
@@ -125,10 +127,10 @@ class fieldfox(thv.thInstr):
 #### test this library using semi Unit Testing ####
 if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
     
-    myff = fieldfox() # read IDN
-    myff.errcheck() # because why not
+    with fieldfox() as myff: # make object, autodispose afterward with-end, read IDN
+        myff.errcheck() # because why not
 
-    myff.ff_title("..testing general fieldfox class..")
+        myff.ff_title("..testing general fieldfox class..")
     
     
     
