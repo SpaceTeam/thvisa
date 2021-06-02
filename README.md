@@ -1,6 +1,11 @@
 # thvisa #
-object-oriented easyness to access dsox1102g (1000x series in general) and rspd3303c/spd3303c in linux/wdos
+object-oriented easyness for pythonic access to
 
+* Keysight oscilloscope DSOX1102G (1000x series in general) 
+* Keysight/Agilent Fieldfox N991xA VNA
+* Siglent rspd3303c/spd3303c 2.5CH lab PSU
+  
+via the SCPI standard. Or to be more precise, the specific implementations, utilizing the pyvisa framwork.
 ## examples ##
 see "main" sections of InfiniiVision_thisa.py and spd3303c_thvisa.py
 
