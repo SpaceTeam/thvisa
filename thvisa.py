@@ -7,7 +7,7 @@ Created on Sat Nov 16 18:23:02 2019
 """
 # re-invent the wheel, because python-ivi seems pretty dead, unfortunately.
 import sys # don't use sys.exit() , it  terminates a while_context_exit!! USE thvisa classes' exit() (no underlines required)
-import visa
+import pyvisa as visa
 import numpy as np
 import time
 import string
@@ -35,18 +35,23 @@ class thInstr(object):
 
     # default attributes for child-classes
     myprintdef = printdummy
-    instrnamedef = 0
-    qdelaydef = 1 # chose 1sec if not overridden to give slow instruments a chance
+    instrnamedef = None
+
     # Initializer / Instance Attributes
-    def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef, wdelay = 0):
+    def __init__(self, instrname = instrnamedef, qdelay = 0, myprint = myprintdef, wdelay = 0, timeout=None):
 
         self.myprint=myprint
         self.myinstruments = []
         self.instr = 0
         self.instrname = instrname
+        
+        # time.sleep variables
         self.qdelay = qdelay # initial query delay
-        self.wdelay = wdelay # write quer delay
-        self.alwayscheck=True
+        self.wdelay = wdelay # write query delay between request and (error) readout (if alwayscheck), in any case after getting result
+        # timeout : no property, since directly given to visa - if aquisition/a response takes longer the instr gets disconnected by visa itself
+        
+        self.alwayscheck=True # see above
+        blacklist=["ASRL"] # asynchronous serial/parallel which fails on *IDN?
         
         self.myprint("looking for instr name {}.. listing instruments shortly..".format(self.instrname))
         try:
@@ -61,10 +66,30 @@ class thInstr(object):
         # for some reason, it's lucky to query the keysight oszi first...
 
         self.myprint("querying instruments..")
+        
         if len(instruments)<0:
             self.myprint("no instruments: sad puppy.")
-        else:
-            self.myprint("say hello")
+            
+        else:   ## blacklisting & detection ##
+        
+            # blacklisting #
+            instruments = list(instruments)
+            instruments2=instruments.copy()
+            self.myprint("blacklisting bad handles..")
+            # clean list
+            for instrument in instruments:        
+                if any(b in instrument for b in blacklist): # check substring
+                    instruments2.remove(instrument)
+                        
+            instruments=instruments2
+            
+            # manually add LAN instr if specified
+            if instrname!=None:
+                if ("TCPIP" in instrname):
+                    instruments.append(instrname)
+       
+            
+            self.myprint("say hello, instruments!")
             for instrument in instruments:
                 self.myprint(instrument)
                 try:
@@ -106,6 +131,8 @@ class thInstr(object):
         # now, if name specified, return thing
         if self.instrname:
             self.instr=(self.getinstrument(instrname, qdelay=qdelay))
+            if timeout!=None:
+                self.instr.timeout = timeout # in ms
             self.instrname=instrname
         else:
             self.myprint("you made no wish, so you aren't gettin' any!")#$do something?
@@ -113,12 +140,12 @@ class thInstr(object):
 
     # end __init__
 
-    def __del__(self):
+    def __del__(self,text="del"):
         #self.instr.close() # shut down # gets called by __del__ of rm
         # as seen here (https://pyvisa.readthedocs.io/en/latest/_modules/pyvisa/highlevel.html#ResourceManager.close)
         if (self.instr):
             self.instr.close()
-            self.myprint("say goodbye, instrument {}!".format(self.instrname))
+            self.myprint("say goodbye, {}! by ".format(self.instrname) +str(text))
 
 
     def exit(self): # shorthand to avoid sys.exit()
@@ -131,7 +158,7 @@ class thInstr(object):
     # misguided past understanding: this gets called on whith-exit #
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
         self.myprint("closing instr. session..")
-        self.__del__() # kill, kill!
+        self.__del__("exit") # kill, kill!
         if not self.instr: # if the instr was closed already
             self.myprint("instr handle invalid in del routine, exiting...")
             sys.exit(0)
@@ -170,7 +197,7 @@ class thInstr(object):
 
     # if needs some mod after init routine
     def setprint(self, function): # to redirect print to pdf, print, etc.
-    	self.myprint=function
+        self.myprint=function
 
     # =========================================================
     # Send a command and check for errors:
