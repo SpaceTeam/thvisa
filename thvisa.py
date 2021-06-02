@@ -7,7 +7,7 @@ Created on Sat Nov 16 18:23:02 2019
 """
 # re-invent the wheel, because python-ivi seems pretty dead, unfortunately.
 import sys # don't use sys.exit() , it  terminates a while_context_exit!! USE thvisa classes' exit() (no underlines required)
-import visa
+import pyvisa as visa
 import numpy as np
 import time
 import string
