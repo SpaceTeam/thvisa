@@ -8,12 +8,18 @@ Created on Sun May 02 2021
 @author: thirschbuechler
 """
 
-import fieldfox_thvisa as ff # import common functions
 import numpy as np #math
 #import matplotlib.pyplot as plt
 import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
+
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+    import fieldfox_thvisa as ff # import common functions
+    testing = True
+else:
+    import thvisa.fieldfox_thvisa as ff # if called as module
+    testing = False
 
 
 class VNA(ff.fieldfox):
@@ -38,7 +44,7 @@ class VNA(ff.fieldfox):
         ## definitions ##
         self.traces = []
         self.abscissa = []
-        self.avgs=1 # default since always used
+        self.avgs=1 # default since always sent
 
         self.setup_done = False
 
@@ -61,7 +67,6 @@ class VNA(ff.fieldfox):
         self.stopFreq = stopFreq
         # further things
         self.ifbw=ifbw
-        self.avgs=avgs
         self.sourcepower = sourcepower
         
         
@@ -70,7 +75,7 @@ class VNA(ff.fieldfox):
         self.do_command("SENS:FREQ:START " + str(self.startFreq))
         self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
         self.do_command("BWID " + str(self.ifbw))
-        self.do_command("AVER:COUNt " + str(self.avgs))
+        self.set_avgs(avgs)
         
         if self.sourcepower=="high":
             self.do_command("SOUR:POW:ALC HIGH")#autolevel high
@@ -99,9 +104,25 @@ class VNA(ff.fieldfox):
         log.append(self.cal_str())
                         
         return log
+
+
+    def set_avgs(self,avgs):
+        self.avgs = avgs
+        self.do_command("AVER:COUNt 1")#reset to invalidate old avgs
+        self.do_command("AVER:COUNt " + str(self.avgs))        
+            
+
+    def sweep_reset(self):
+        """  manually reset avg!
+        otherwise more than avg count required to get rid of old stuff"""
+        # self.do_command("INIT:REST")# does not work
         
-            
-            
+        # circumvent 
+        #self.do_command("AVER:COUNt 1")# initate restart via reset to 0
+        #self.do_command("AVER:COUNt 5")
+        #self.do_command("INIT:IMM")#now dueto 
+
+        self.set_avgs(self.avgs)#use the setter as it clears as well
 
     # enable trigger and get data into instr memory
     def do_sweeps(self, continous="off"):
@@ -110,7 +131,9 @@ class VNA(ff.fieldfox):
         self.do_command("INIT:CONT "+str(continous)+"")
         
         self.myprint("aquiring data "+str(self.avgs)+" times, acc. to avg")
-        for i in range(self.avgs): # have to manually trigger each run for the averaging..
+        if self.avgs > 1:
+            self.sweep_reset()
+        for i in range(self.avgs): # manually trigger each run for the averaging..
             ret = self.do_command("INIT:IMM")  # opc baked into do_command
             self.myprint("Single Trigger complete, *OPC? returned : " + ret)
 
@@ -230,7 +253,7 @@ class VNA(ff.fieldfox):
     
 
 #### test this library using semi Unit Testing ####
-if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+if testing:
     
     with VNA() as myvna:
         myvna.ff_title("Hello")

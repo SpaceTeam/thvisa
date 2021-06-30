@@ -8,8 +8,14 @@ Created on Sun May 02 2021
 @author: thirschbuechler
 """
 
-import thvisa as thv
 import time
+
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+    import thvisa as thv # import common visa functions
+    testing = true
+else:
+    import thvisa.thvisa as thv # if called as module
+
 
 
 class fieldfox(thv.thInstr):
@@ -72,15 +78,17 @@ class fieldfox(thv.thInstr):
                 myError = list(myError)
         return myError
 
-    def do_command(self, cmd, qdelay=None):
+    def do_command(self, cmd, qdelay=None, OPC=1):
         if qdelay==None:
-            qdelay=self.qdelay # self undefined above
+            qdelay=self.qdelay
             
         #super(fieldfox, self).do_command(cmd)
-        #return self.instr.write("*OPC?")
         
-        self.instr.write(cmd+";*OPC?")
-        #self.instr.write(cmd)
+        if OPC: # 99% of all commands will cause "Query unterminated" without this
+            cmd+=";*OPC?"
+
+        self.instr.write(cmd)
+
         time.sleep(qdelay)
         return self.instr.read()
 
