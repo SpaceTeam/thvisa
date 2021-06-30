@@ -78,15 +78,17 @@ class fieldfox(thv.thInstr):
                 myError = list(myError)
         return myError
 
-    def do_command(self, cmd, qdelay=None):
+    def do_command(self, cmd, qdelay=None, OPC=1):
         if qdelay==None:
-            qdelay=self.qdelay # self undefined above
+            qdelay=self.qdelay
             
         #super(fieldfox, self).do_command(cmd)
-        #return self.instr.write("*OPC?")
         
-        self.instr.write(cmd+";*OPC?")
-        #self.instr.write(cmd)
+        if OPC: # 99% of all commands will cause "Query unterminated" without this
+            cmd+=";*OPC?"
+
+        self.instr.write(cmd)
+
         time.sleep(qdelay)
         return self.instr.read()
 
