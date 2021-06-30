@@ -8,8 +8,14 @@ Created on Sun May 02 2021
 @author: thirschbuechler
 """
 
-import thvisa as thv
 import time
+
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+    import thvisa as thv # import common visa functions
+    testing = true
+else:
+    import thvisa.thvisa as thv # if called as module
+
 
 
 class fieldfox(thv.thInstr):

@@ -8,12 +8,18 @@ Created on Sun May 02 2021
 @author: thirschbuechler
 """
 
-import fieldfox_thvisa as ff # import common functions
 import numpy as np #math
 #import matplotlib.pyplot as plt
 import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
+
+if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+    import fieldfox_thvisa as ff # import common functions
+    testing = True
+else:
+    import thvisa.fieldfox_thvisa as ff # if called as module
+    testing = False
 
 
 class VNA(ff.fieldfox):
@@ -230,7 +236,7 @@ class VNA(ff.fieldfox):
     
 
 #### test this library using semi Unit Testing ####
-if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+if testing:
     
     with VNA() as myvna:
         myvna.ff_title("Hello")
