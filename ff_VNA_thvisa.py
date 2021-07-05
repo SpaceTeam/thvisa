@@ -124,8 +124,9 @@ class VNA(ff.fieldfox):
 
         self.set_avgs(self.avgs)#use the setter as it clears as well
 
-    # enable trigger and get data into instr memory
+
     def do_sweeps(self, continous="off"):
+        """ enable trigger and get data into instr memory """
         # Set trigger mode to hold for trigger synchronization
         #continous="off" # during measurement.. anyway
         self.do_command("INIT:CONT "+str(continous)+"")
@@ -135,10 +136,12 @@ class VNA(ff.fieldfox):
             self.sweep_reset()
         for i in range(self.avgs): # manually trigger each run for the averaging..
             ret = self.do_command("INIT:IMM")  # opc baked into do_command
-            self.myprint("Single Trigger complete, *OPC? returned : " + ret)
+            #self.myprint("Single Trigger complete, *OPC? returned : " + ret)
+            self.myprint("Trig'd({}/{})".format(i+1,self.avgs)) #, *OPC? returned : " + ret)
 
 
     def make_abscissa(self):
+        """ fetch f-axis stuff from VNA """
         if not self.setup_done:
             self.numPoints=self.do_query_string("SENS:SWE:POIN?")
             self.startFreq=self.do_query_string("SENS:FREQ:START?")
