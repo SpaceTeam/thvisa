@@ -38,11 +38,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyvisa as visa#same as import visa apparently
 
-# A variable to control various events and testing during development.
-# by uncommenting the #debug True line, debug will occur, for efficiency, during development.
 
-debug = True
 
+# Define Error Check Function
 def Errcheck():
     myError = []
     ErrorList = myFieldFox.query("SYST:ERR?").split(',')
@@ -66,25 +64,31 @@ def Errcheck():
 #-#-# module test #-#-#
 if __name__ == '__main__': # test if called as executable, not as library
 
-       
-    
+
+    debug = True
     # Set variables for ease of change - assumes 'debug is true.
     # If debug is set to false then Spectrum Analyzer preset defaults for
     # start frequency, stop frequency and number of points are utilized.
     numPoints = 1001#21#seriously, keysight?
     startFreq = 2.4E9#1.28579E9
     stopFreq = 2.5E9#2.28579E9
+    
+
+    ## open connection ##
+    
     rm = visa.ResourceManager()
     myFieldFox = rm.open_resource("TCPIP::K-N9914A-71670.local::inst0::INSTR")#IFT fieldfox
     #Set Timeout - 10 seconds
     myFieldFox.timeout = 10000
     # Clear the event status registers and empty the error queue
+    
     myFieldFox.write("*CLS")
     # Query identification string *IDN?
     myFieldFox.write("*IDN?")
     print (myFieldFox.read())
-    # Define Error Check Function
     
+    
+    ## preset ##
     
     # Call and print error check results
     print (Errcheck())
@@ -101,6 +105,10 @@ if __name__ == '__main__': # test if called as executable, not as library
         myFieldFox.write("SENS:SWE:POIN " + str(numPoints))
         myFieldFox.write("SENS:FREQ:START " + str(startFreq))
         myFieldFox.write("SENS:FREQ:STOP " + str(stopFreq))
+
+
+    ## readback setup - optional ##
+    
     # Determine, i.e. query, number of points in trace for ASCII transfer - query
     myFieldFox.write("SENS:SWE:POIN?")
     numPoints = myFieldFox.read()
@@ -111,25 +119,25 @@ if __name__ == '__main__': # test if called as executable, not as library
     myFieldFox.write("SENS:FREQ:STOP?")
     stopFreq = myFieldFox.read()
     print("FieldFox start frequency = " + startFreq + " stop frequency = " + stopFreq)
+
+
+    ## setup trigger and get data ##
+
     # Set trigger mode to hold for trigger synchronization
     myFieldFox.write("INIT:CONT OFF;*OPC?")
-    myFieldFox.read()
-    # Use of Python numpy import to comupte linear step size of stimulus array
-    # based on query of the start frequency - stop frequency and number of points.
-    # 'Other' analyzers support a SCPI "SENSe:X?" query which will provide the stimulus
-    # array as a SCPI query.
-    
-    stimulusArray = np.linspace(float(startFreq),float(stopFreq),int(numPoints))
-    #print(stimulusArray)
+    myFieldFox.read()    
+
     # Assert a single trigger and wait for trigger complete via *OPC? output of a 1
     myFieldFox.write("INIT:IMM;*OPC?")
     print("Single Trigger complete, *OPC? returned : " + myFieldFox.read())
     
-    
-    
     # Query the FieldFox response data
     myFieldFox.write("TRACE:DATA?")
     ff_SA_Trace_Data = myFieldFox.read()
+    
+    
+    ## prep and plot data ##
+    
     #print(ff_SA_Trace_Data)# This is one long comma separated string list of values.
     # Use split to turn long string to an array of values
     ff_SA_Trace_Data_Array = ff_SA_Trace_Data.split(",")
@@ -141,6 +149,8 @@ if __name__ == '__main__': # test if called as executable, not as library
     #plt.title ("Keysight FieldFox Spectrum Trace Data via Python - PyVisa - SCPI")
     #plt.xlabel("Frequency")
     #plt.ylabel("Amplitude (dBm)")
+    stimulusArray = np.linspace(float(startFreq),float(stopFreq),int(numPoints))# freq axis #
+    #print(stimulusArray)
     #plt.plot(stimulusArray,ff_SA_Trace_Data_Array)
     fig, ax = plt.subplots()
     ff_SA_Trace_Data_Array=np.array(ff_SA_Trace_Data_Array)
@@ -151,6 +161,10 @@ if __name__ == '__main__': # test if called as executable, not as library
     ax.set_ylabel("Amplitude (dBm)")
     #plt.autoscale(True, True, True)
     plt.show()
+
+
+    ## cleanup ##
+
     # Return the FieldFox back to free run trigger mode
     myFieldFox.write("INIT:CONT ON")
     # Send a corrupt SCPI command end of application as a debug test
