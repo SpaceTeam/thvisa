@@ -75,9 +75,11 @@ if __name__ == '__main__': # test if called as executable, not as library
     
 
     ## open connection ##
-    
+    instrnamedef = "TCPIP::K-N9914A-71670.local::inst0::INSTR" # TCPIP: full name since no autodetection 
+    instrnamedef = "USB0::10893::23576::MY57271670::0::INSTR" # USB: not fullname required but whatever
+
     rm = visa.ResourceManager()
-    myFieldFox = rm.open_resource("TCPIP::K-N9914A-71670.local::inst0::INSTR")#IFT fieldfox
+    myFieldFox = rm.open_resource(instrnamedef)#IFT fieldfox
     #Set Timeout - 10 seconds
     myFieldFox.timeout = 10000
     # Clear the event status registers and empty the error queue
