@@ -53,9 +53,11 @@ class VNA(ff.fieldfox):
 
     def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1, sourcepower = "high" ):
         
+        # first set freq range
         super(VNA, self).__init__(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
         self.sourcepower = sourcepower
         
+        # then change stimulus
         if self.sourcepower=="high":
             self.do_command("SOUR:POW:ALC HIGH")#autolevel high
         elif self.sourcepower=="low":
@@ -66,24 +68,6 @@ class VNA(ff.fieldfox):
             #self.do_command("source:power " + str(self.sourcepower))#for manual control only
         
         self.setup_done = True
-
-
-    def askandlog(self, thing):
-        return(thing+" "+self.do_query_string(thing))
-        
-        
-    def query_setup(self):
-        
-        log=[]
-        log.append(self.askandlog("SENS:SWE:POIN?"))
-        log.append(self.askandlog("SENS:FREQ:START?"))
-        log.append(self.askandlog("SENS:FREQ:STOP?"))
-        log.append(self.askandlog("BWID?"))
-        log.append(self.askandlog("AVER:COUNt?"))
-        log.append(self.askandlog("SOUR:POW:ALC?"))
-        log.append(self.cal_str())
-                        
-        return log
 
 
     def logmag_all(self):# for cal and so on

@@ -210,6 +210,24 @@ class fieldfox(thv.thInstr):
             self.do_command("disp:TITL 0")
 
 
+    def askandlog(self, thing):
+        return(thing+" "+self.do_query_string(thing))
+
+
+    def query_setup(self):
+        
+        log=[]
+        log.append(self.askandlog("SENS:SWE:POIN?"))
+        log.append(self.askandlog("SENS:FREQ:START?"))
+        log.append(self.askandlog("SENS:FREQ:STOP?"))
+        log.append(self.askandlog("BWID?"))
+        log.append(self.askandlog("AVER:COUNt?"))
+        log.append(self.askandlog("SOUR:POW:ALC?"))
+        log.append(self.cal_str())
+                        
+        return log
+
+
 
 #### test this library using semi Unit Testing ####
 if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
