@@ -52,7 +52,7 @@ class speccy(ff.fieldfox):
 
 
     def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1):
-        super(speccy, self).setup(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+        super(speccy, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
         self.setup_done = True
 
 

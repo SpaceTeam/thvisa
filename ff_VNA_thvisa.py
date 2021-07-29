@@ -54,7 +54,7 @@ class VNA(ff.fieldfox):
     def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1, sourcepower = "high" ):
         
         # first set freq range
-        super(VNA, self).setup(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+        super(VNA, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
         self.sourcepower = sourcepower
         
         # then change stimulus
