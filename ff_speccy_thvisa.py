@@ -36,7 +36,7 @@ class speccy(ff.fieldfox):
         self.instrname=instrname 
         self.myprint=myprint
         self.qdelay=qdelay
-        self.role="SA"
+        self.role="SA" # for super.setup()
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
@@ -52,7 +52,7 @@ class speccy(ff.fieldfox):
 
 
     def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1):
-        super(VNA, self).__init__(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+        super(speccy, self).setup(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
         self.setup_done = True
 
 
