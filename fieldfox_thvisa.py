@@ -9,12 +9,14 @@ Created on Sun May 02 2021
 """
 
 import time
+import numpy as np # abscissa
 
 if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
     import thvisa as thv # import common visa functions
-    testing = true
+    testing = True
 else:
     import thvisa.thvisa as thv # if called as module
+    testing = False
 
 
 
