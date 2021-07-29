@@ -14,12 +14,19 @@ import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
 
-if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
+#-#-# module test #-#-#
+testing=False # imports don't seem to traverse this before reaching EOF and complaining about undef_bool !?
+if __name__ == '__main__': # test if called as executable, not as library    
+    testing=True
+    #tester()#since this is no fct definition, can't call this, also py has no forward-declaration option
+
+try:
     import fieldfox_thvisa as ff # import common functions
-    testing = True
-else:
-    import thvisa.fieldfox_thvisa as ff # if called as module
-    testing = False
+except:
+    try:
+        import thvisa.fieldfox_thvisa as ff # if called as module
+    except:
+        print("failed to import module directly or via submodule -  mind adding them with underscores not operators (minuses aka dashes, etc.)")
 
 
 class speccy(ff.fieldfox):
@@ -32,7 +39,7 @@ class speccy(ff.fieldfox):
     
     def __init__(self, instrname = instrnamedef, myprint = myprintdef, qdelay = 0, wdelay=0):
         ## set defaults or overrides as given to init() ##
-        #super(VNA, self).super(fieldfox, self).instr.timeout = 10000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout" $$ does this really go here or into instr.timeout somehow..
+        #super(speccy, self).super(fieldfox, self).instr.timeout = 10000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout" $$ does this really go here or into instr.timeout somehow..
         self.instrname=instrname 
         self.myprint=myprint
         self.qdelay=qdelay
@@ -40,7 +47,7 @@ class speccy(ff.fieldfox):
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
-        super(VNA, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
+        super(speccy, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
 
         self.traces = []
 
@@ -48,11 +55,16 @@ class speccy(ff.fieldfox):
 
 
     def __exit__(self, exc_type, exc_value, tb):# "with" context exit: call del
-        super(VNA, self).__exit__( exc_type, exc_value, tb) # call parent
+        super(speccy, self).__exit__( exc_type, exc_value, tb) # call parent
 
 
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1):
-        super(speccy, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, span="", avgs=1):
+        super(speccy, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, avgs=avgs) # call parent
+        
+        if span!="":
+            self.span = span
+            self.do_command("FREQ:SPAN " + str(self.span))
+
         self.setup_done = True
 
 
@@ -67,6 +79,7 @@ class speccy(ff.fieldfox):
 
     def collect_traces(self):
         """ collect trace, same naming as in NA """
+        self.traces=[]
         self.traces.append(self.get_trace())
         self.make_abscissa() #afterwards, to not prolong with aquisition if setup_done==True
 
@@ -99,7 +112,7 @@ if testing:
         spek.ff_title("Hello")
         spek.errcheck() # because why not
     
-        spek.ff_title("..testing VNA fieldfox class..")
+        spek.ff_title("..testing speccy fieldfox class..")
         
         t1 = perf_counter() 
         spek.do_sweeps()

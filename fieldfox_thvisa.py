@@ -70,16 +70,11 @@ class fieldfox(thv.thInstr):
         self.numPoints = numPoints
         self.startFreq = startFreq
         self.stopFreq = stopFreq
-
-        # common rf settings
-        self.ifbw=ifbw
-
         
         ## msr setup ##
         self.do_command("SENS:SWE:POIN " + str(self.numPoints))
         self.do_command("SENS:FREQ:START " + str(self.startFreq))
         self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
-        self.do_command("BWID " + str(self.ifbw))
         self.set_avgs(avgs)
 
         #self.setup_done = True # in childclasses
@@ -224,9 +219,10 @@ class fieldfox(thv.thInstr):
         log.append(self.askandlog("SENS:FREQ:STOP?"))
         log.append(self.askandlog("BWID?"))
         log.append(self.askandlog("AVER:COUNt?"))
-        log.append(self.askandlog("SOUR:POW:ALC?"))
-        log.append(self.cal_str())
-                        
+        if self.role=="NA":
+            log.append(self.askandlog("SOUR:POW:ALC?"))
+            log.append(self.cal_str())
+                            
         return log
 
 

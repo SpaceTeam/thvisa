@@ -63,7 +63,12 @@ class VNA(ff.fieldfox):
         
         # first set freq range
         super(VNA, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+        
+        # common rf settings
+        self.ifbw=ifbw
         self.sourcepower = sourcepower
+
+        self.do_command("BWID " + str(self.ifbw))
         
         # then change stimulus
         if self.sourcepower=="high":
