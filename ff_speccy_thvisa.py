@@ -72,7 +72,7 @@ class speccy(ff.fieldfox):
         """ get SA trace """
         trace_csv = self.do_query_string("TRACE:DATA?")
         trace_data = np.array(trace_csv.split(",")).astype(float)
-        trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
+        #trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
         
         return trace_data # k x 2 matrix
 
@@ -92,10 +92,11 @@ class speccy(ff.fieldfox):
         for trace in self.traces:
             # RE = trace[:,0]
             # IM = trace[:,1]
-            S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
-            angle = 180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) #np.unwrap doesn't change anything; still different wrapping
-            s2p_data.append(df(S_dB))
-            s2p_data.append(df(angle))
+            #S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
+            #angle = 180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) #np.unwrap doesn't change anything; still different wrapping
+            #s2p_data.append(df(S_dB))
+            #s2p_data.append(df(angle))
+            s2p_data.append(df(trace))
         
         
         s2p_frame = pd.concat(s2p_data, axis=1) # concat the concat array

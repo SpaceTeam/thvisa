@@ -217,11 +217,15 @@ class fieldfox(thv.thInstr):
         log.append(self.askandlog("SENS:SWE:POIN?"))
         log.append(self.askandlog("SENS:FREQ:START?"))
         log.append(self.askandlog("SENS:FREQ:STOP?"))
-        log.append(self.askandlog("BWID?"))
+        
         log.append(self.askandlog("AVER:COUNt?"))
+        
         if self.role=="NA":
+            log.append(self.askandlog("BWID?"))
             log.append(self.askandlog("SOUR:POW:ALC?"))
             log.append(self.cal_str())
+        else: # SA speccy
+            log.append(self.askandlog("SENS:FREQ:SPAN?"))
                             
         return log
 
