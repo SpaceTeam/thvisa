@@ -31,20 +31,18 @@ class VNA(ff.fieldfox):
     
         
     def __init__(self, instrname = instrnamedef, myprint = myprintdef, qdelay = 0, wdelay=0):
-         ## set defaults or overrides as given to init() ##
+        ## set defaults or overrides as given to init() ##
         #super(VNA, self).super(fieldfox, self).instr.timeout = 10000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout" $$ does this really go here or into instr.timeout somehow..
         self.instrname=instrname 
         self.myprint=myprint
         self.qdelay=qdelay
+        self.role="NA"
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(VNA, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
-
-        ## definitions ##
+        
         self.traces = []
-        self.abscissa = []
-        self.avgs=1 # default since always sent
 
         self.setup_done = False
 
@@ -54,28 +52,9 @@ class VNA(ff.fieldfox):
 
 
     def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1, sourcepower = "high" ):
-        if hard:
-            # Preset the FieldFox  
-            self.do_command("SYST:PRES")#"SYST:PRES;*OPC?" # docommand does opc inherited by fieldfox mainclass
-            # Set mode to VNA   
-            self.do_command("INST:SEL 'NA'")
-            
-                
-        # abscissa
-        self.numPoints = numPoints
-        self.startFreq = startFreq
-        self.stopFreq = stopFreq
-        # further things
-        self.ifbw=ifbw
+        
+        super(VNA, self).__init__(hard=True, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
         self.sourcepower = sourcepower
-        
-        
-        ## msr setup ##
-        self.do_command("SENS:SWE:POIN " + str(self.numPoints))
-        self.do_command("SENS:FREQ:START " + str(self.startFreq))
-        self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
-        self.do_command("BWID " + str(self.ifbw))
-        self.set_avgs(avgs)
         
         if self.sourcepower=="high":
             self.do_command("SOUR:POW:ALC HIGH")#autolevel high
@@ -87,10 +66,11 @@ class VNA(ff.fieldfox):
             #self.do_command("source:power " + str(self.sourcepower))#for manual control only
         
         self.setup_done = True
-        
+
+
     def askandlog(self, thing):
         return(thing+" "+self.do_query_string(thing))
-            
+        
         
     def query_setup(self):
         
@@ -106,54 +86,6 @@ class VNA(ff.fieldfox):
         return log
 
 
-    def set_avgs(self,avgs):
-        self.avgs = avgs
-        self.do_command("AVER:COUNt 1")#reset to invalidate old avgs
-        self.do_command("AVER:COUNt " + str(self.avgs))        
-            
-
-    def sweep_reset(self):
-        """  manually reset avg!
-        otherwise more than avg count required to get rid of old stuff"""
-        # self.do_command("INIT:REST")# does not work
-        
-        # circumvent 
-        #self.do_command("AVER:COUNt 1")# initate restart via reset to 0
-        #self.do_command("AVER:COUNt 5")
-        #self.do_command("INIT:IMM")#now dueto 
-
-        self.set_avgs(self.avgs)#use the setter as it clears as well
-
-
-    def do_sweeps(self, continous="off"):
-        """ enable trigger and get data into instr memory """
-        # Set trigger mode to hold for trigger synchronization
-        #continous="off" # during measurement.. anyway
-        self.do_command("INIT:CONT "+str(continous)+"")
-        
-        self.myprint("aquiring data "+str(self.avgs)+" times, acc. to avg")
-        if self.avgs > 1:
-            self.sweep_reset()
-        for i in range(self.avgs): # manually trigger each run for the averaging..
-            ret = self.do_command("INIT:IMM")  # opc baked into do_command
-            #self.myprint("Single Trigger complete, *OPC? returned : " + ret)
-            self.myprint("Trig'd({}/{})".format(i+1,self.avgs)) #, *OPC? returned : " + ret)
-
-
-    def make_abscissa(self):
-        """ fetch f-axis stuff from VNA """
-        if not self.setup_done:
-            self.numPoints=self.do_query_string("SENS:SWE:POIN?")
-            self.startFreq=self.do_query_string("SENS:FREQ:START?")
-            self.stopFreq=self.do_query_string("SENS:FREQ:STOP?")
-            
-        # build
-        self.abscissa = np.linspace(float(self.startFreq),float(self.stopFreq),int(self.numPoints)) 
-        # notes
-            #SCPI "SENSe:X?" probably unsupported
-            # however Read X-axis values possible via-     [:SENSe]:FREQuency:DATA?
-
-    
     def logmag_all(self):# for cal and so on
         for i in [1,2,3,4]:
             self.do_command("CALC:PAR"+str(i)+":SEL") # select trace
@@ -170,7 +102,7 @@ class VNA(ff.fieldfox):
         else:
             self.do_command("calculate:format polar") # polar gives mag+phase of Gamma (linear)
         
-  
+
         # p302 - format:data
         # p200 - calc:data:fdata: undefined for polar and smith. fdata - formatted display (mag only)
         # slight differences in decimals: aquisition - 

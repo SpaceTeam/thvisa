@@ -27,16 +27,20 @@ class fieldfox(thv.thInstr):
     qdelaydef = 0.5
         
     def __init__(self, instrname = instrnamedef, qdelay = qdelaydef, myprint = myprintdef):
+        
         ## set defaults or overrides as given to init() ##
         self.timeout = 10000 # "https://pyvisa.readthedocs.io/en/1.8/resources.html#timeout"
         self.instrname=instrname 
         self.myprint=myprint
         self.qdelay=qdelay
+        #self.role="bla" # NA=VNA, SA=speccy - both need be set by ff_VNA_thvisa or ff_speccy_thvisa children
+
+        self.abscissa = []
+        self.avgs=1 # default since always sent
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(fieldfox, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay, timeout=10000) 
-        
         
         self.do_command("*CLS")#clear any old errors
         #self.reset() dependent on application - do in subclass or actual script
@@ -48,6 +52,86 @@ class fieldfox(thv.thInstr):
             self.instr.clear()#clear seems unsupported by USBtmc, wtf
         super(fieldfox, self).__exit__( exc_type, exc_value, tb) # self.instr.close() and so on
 
+
+    ## main shared functions ##
+    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1):
+        """ parent setup class
+            to be called and appended by ff_VNA or ff_speccy children"""
+        if hard:
+            # Preset the FieldFox  
+            self.do_command("SYST:PRES")#"SYST:PRES;*OPC?" # docommand does opc inherited by fieldfox mainclass
+            # Set mode to VNA   
+            self.do_command("INST:SEL '{}'".format(self.role))
+            
+                
+        # abscissa
+        self.numPoints = numPoints
+        self.startFreq = startFreq
+        self.stopFreq = stopFreq
+
+        # common rf settings
+        self.ifbw=ifbw
+
+        
+        ## msr setup ##
+        self.do_command("SENS:SWE:POIN " + str(self.numPoints))
+        self.do_command("SENS:FREQ:START " + str(self.startFreq))
+        self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
+        self.do_command("BWID " + str(self.ifbw))
+        self.set_avgs(avgs)
+
+        #self.setup_done = True # in childclasses
+
+
+    def set_avgs(self,avgs):
+        self.avgs = avgs
+        self.do_command("AVER:COUNt 1")#reset to invalidate old avgs
+        self.do_command("AVER:COUNt " + str(self.avgs))        
+        
+
+    def sweep_reset(self):
+        """  manually reset avg!
+        otherwise more than avg count required to get rid of old stuff"""
+        # self.do_command("INIT:REST")# does not work
+        
+        # circumvent 
+        #self.do_command("AVER:COUNt 1")# initate restart via reset to 0
+        #self.do_command("AVER:COUNt 5")
+        #self.do_command("INIT:IMM")#now dueto 
+
+        self.set_avgs(self.avgs)#use the setter as it clears as well
+
+
+    def do_sweeps(self, continous="off"):
+        """ enable trigger and get data into instr memory """
+        # Set trigger mode to hold for trigger synchronization
+        #continous="off" # during measurement.. anyway
+        self.do_command("INIT:CONT "+str(continous)+"")
+        
+        self.myprint("aquiring data "+str(self.avgs)+" times, acc. to avg")
+        if self.avgs > 1:
+            self.sweep_reset()
+        for i in range(self.avgs): # manually trigger each run for the averaging..
+            ret = self.do_command("INIT:IMM")  # opc baked into do_command
+            #self.myprint("Single Trigger complete, *OPC? returned : " + ret)
+            self.myprint("Trig'd({}/{})".format(i+1,self.avgs)) #, *OPC? returned : " + ret)
+
+
+    def make_abscissa(self):
+        """ fetch f-axis stuff from VNA """
+        if not self.setup_done:
+            self.numPoints=self.do_query_string("SENS:SWE:POIN?")
+            self.startFreq=self.do_query_string("SENS:FREQ:START?")
+            self.stopFreq=self.do_query_string("SENS:FREQ:STOP?")
+            
+        # build
+        self.abscissa = np.linspace(float(self.startFreq),float(self.stopFreq),int(self.numPoints)) 
+        # notes
+            #SCPI "SENSe:X?" probably unsupported
+            # however Read X-axis values possible via-     [:SENSe]:FREQuency:DATA?
+
+
+    ## other helpers ##
 
     # frontpanel input access control
     def lock(self,state=1):
@@ -77,6 +161,7 @@ class fieldfox(thv.thInstr):
                 Error = ErrorList[0]
                 myError = list(myError)
         return myError
+
 
     def do_command(self, cmd, qdelay=None, OPC=1):
         if qdelay==None:
@@ -116,12 +201,6 @@ class fieldfox(thv.thInstr):
         #self.myprint("Setup bytes restored: %d" % len(sSetup))
         pass
 
-    
-
-    # enable trigger and get data #
-    #def capture(self): # mode depentent unfortunately, see ff_vna (exists) and ff_speccy (todo)
-        #pass
-        
 
     def ff_title(self, title=None):
         if title!=None:
@@ -139,7 +218,3 @@ if __name__ == '__main__': # test if called as executable, not as library, regul
         myff.errcheck() # because why not
 
         myff.ff_title("..testing general fieldfox class..")
-    
-    
-    
- 
