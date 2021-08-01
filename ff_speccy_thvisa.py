@@ -44,11 +44,15 @@ class speccy(ff.fieldfox):
         self.myprint=myprint
         self.qdelay=qdelay
         self.role="SA" # for super.setup()
+        #self.span="" # for zerospan checks lateron, needs init by setup() # nope do it here after "super"
         
+
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(speccy, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
 
+        # we have an instrument, ask for the span, needs to be init for span-checks
+        self.span=self.do_query_string("FREQ:SPAN?")
         self.traces = []
         
         self.setup_done = False
@@ -68,7 +72,7 @@ class speccy(ff.fieldfox):
         self.setup_done = True
 
 
-    def set_sweeptime(self,stime):
+    def set_fd_sweeptime(self,stime):
         """ 
         SWEep:ACQuisition <num>
         (Read-Write) Set and query the sweep acquisition parameter. This effectively sets the sweep time in SA
@@ -77,7 +81,7 @@ class speccy(ff.fieldfox):
 
             Also set [:SENSe]:SWEep:ACQuisition:AUTO to 0 (OFF).Command Reference
         
-            Relevant Modes SA, RTSA
+            Relevant Modes SA, RTSA, NOT ZEROSPAN
         Parameters
         - <num> Choose a relative acquisition value between 1 and 5000, where:
         - 1 = Fastest sweep possible
@@ -88,14 +92,17 @@ class speccy(ff.fieldfox):
         Default 1
         """
 
-        if int(self.span)!=0:
-            raise Exception("can't set time unless Zero span!")
+        if int(self.span)==0:
+            raise Exception("use non-fd version of this command!")
 
+        # note: "sweep" needs to be written out, "SWE" seems to not work
+        self.do_command("sweep:ACQ:AUTO 0")
         self.do_command("sweep:ACQ " + str(stime))#sweep:aquisition      
+        
         self.stime=stime  
 
 
-    def get_sweeptime(self):
+    def get_fd_sweeptime(self):
         """ 
         [:SENSe]:SWEep:ACQuisition <num>
         (Read-Write) Set and query the sweep acquisition parameter. This effectively sets the sweep time in SA
@@ -104,7 +111,7 @@ class speccy(ff.fieldfox):
 
             Also set [:SENSe]:SWEep:ACQuisition:AUTO to 0 (OFF).Command Reference
         
-            Relevant Modes SA, RTSA
+            Relevant Modes SA, RTSA, NOT ZEROSPAN
         Parameters
         - <num> Choose a relative acquisition value between 1 and 5000, where:
         - 1 = Fastest sweep possible
@@ -118,9 +125,9 @@ class speccy(ff.fieldfox):
         
         Default 1
         """
-        
-        #if int(self.span)!=0: # getting f-sweep time is probably possible as well
-        #    raise Exception("can't get sweep time unless Zero span!")
+
+        if int(self.span)==0:
+            raise Exception("use non-fd version of this command!")        
     
         stime=self.do_query_string("SENS:sweep:acq?")#sense:sweep:aquisition
         self.stime=stime
