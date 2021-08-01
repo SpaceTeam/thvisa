@@ -48,7 +48,7 @@ class speccy(ff.fieldfox):
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(speccy, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
-        
+
         self.traces = []
         
         self.setup_done = False
@@ -68,12 +68,56 @@ class speccy(ff.fieldfox):
         self.setup_done = True
 
 
-    def set_sweeptime(self,time):
-        pass # sweep:aquisition
+    def set_sweeptime(self,stime):
+        """ 
+        SWEep:ACQuisition <num>
+        (Read-Write) Set and query the sweep acquisition parameter. This effectively sets the sweep time in SA
+        mode. Adjust this setting in order to increase the probability of intercepting and viewing pulsed RF
+        signals. (page 450)
+
+            Also set [:SENSe]:SWEep:ACQuisition:AUTO to 0 (OFF).Command Reference
+        
+            Relevant Modes SA, RTSA
+        Parameters
+        - <num> Choose a relative acquisition value between 1 and 5000, where:
+        - 1 = Fastest sweep possible
+        - 5,000 = Slowest sweep possible.
+
+        Examples SWE:ACQ 25
+
+        Default 1
+        """
+
+        self.do_command("SWEP:ACQ " + str(self.stime))#sweep:aquisition        
 
 
     def get_sweeptime(self,time):
-        pass #sense:sweep:aquisition
+        """ 
+        [:SENSe]:SWEep:ACQuisition <num>
+        (Read-Write) Set and query the sweep acquisition parameter. This effectively sets the sweep time in SA
+        mode. Adjust this setting in order to increase the probability of intercepting and viewing pulsed RF
+        signals. (page 450)
+
+            Also set [:SENSe]:SWEep:ACQuisition:AUTO to 0 (OFF).Command Reference
+        
+            Relevant Modes SA, RTSA
+        Parameters
+        - <num> Choose a relative acquisition value between 1 and 5000, where:
+        - 1 = Fastest sweep possible
+        - 5,000 = Slowest sweep possible.
+
+        Examples SWE:ACQ 25
+        
+        Query Syntax [:SENSe]:SWEep:ACQuisition?
+        
+        Return Type Numeric
+        
+        Default 1
+        """
+        
+        stime=self.do_query_string("SENS:SWEP:ACQ")#sense:sweep:aquisition
+        self.stime=stime
+        return stime
 
 
     def get_trace(self):
