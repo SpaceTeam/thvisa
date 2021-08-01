@@ -226,6 +226,10 @@ class fieldfox(thv.thInstr):
             log.append(self.cal_str())
         else: # SA speccy
             log.append(self.askandlog("SENS:FREQ:SPAN?"))
+
+
+        log.append("all properties of class:")
+        log.append(str(vars(self)))
                             
         return log
 
