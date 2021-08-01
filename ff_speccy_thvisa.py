@@ -122,7 +122,7 @@ class speccy(ff.fieldfox):
         #if int(self.span)!=0: # getting f-sweep time is probably possible as well
         #    raise Exception("can't get sweep time unless Zero span!")
     
-        stime=self.do_query_string("SENS:SWEP:ACQ")#sense:sweep:aquisition
+        stime=self.do_query_string("SENS:sweep:acq?")#sense:sweep:aquisition
         self.stime=stime
         return stime
 
