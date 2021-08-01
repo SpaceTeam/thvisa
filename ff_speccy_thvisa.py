@@ -91,7 +91,7 @@ class speccy(ff.fieldfox):
         if int(self.span)!=0:
             raise Exception("can't set time unless Zero span!")
 
-        self.do_command("SWEP:ACQ " + str(self.stime))#sweep:aquisition      
+        self.do_command("sweep:ACQ " + str(stime))#sweep:aquisition      
         self.stime=stime  
 
 
