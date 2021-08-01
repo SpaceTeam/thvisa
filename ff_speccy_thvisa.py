@@ -88,10 +88,14 @@ class speccy(ff.fieldfox):
         Default 1
         """
 
-        self.do_command("SWEP:ACQ " + str(self.stime))#sweep:aquisition        
+        if int(self.span)!=0:
+            raise Exception("can't set time unless Zero span!")
+
+        self.do_command("SWEP:ACQ " + str(self.stime))#sweep:aquisition      
+        self.stime=stime  
 
 
-    def get_sweeptime(self,time):
+    def get_sweeptime(self):
         """ 
         [:SENSe]:SWEep:ACQuisition <num>
         (Read-Write) Set and query the sweep acquisition parameter. This effectively sets the sweep time in SA
@@ -115,6 +119,9 @@ class speccy(ff.fieldfox):
         Default 1
         """
         
+        #if int(self.span)!=0: # getting f-sweep time is probably possible as well
+        #    raise Exception("can't get sweep time unless Zero span!")
+    
         stime=self.do_query_string("SENS:SWEP:ACQ")#sense:sweep:aquisition
         self.stime=stime
         return stime
