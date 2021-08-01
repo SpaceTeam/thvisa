@@ -62,12 +62,15 @@ class speccy(ff.fieldfox):
         super(speccy, self).__exit__( exc_type, exc_value, tb) # call parent
 
 
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, span="", avgs=1):
+    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, span="", centerfreq="", avgs=1):
         super(speccy, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, avgs=avgs) # call parent
         
+        # case span n centerfreq given (probably zerospan)
         if span!="":
             self.span = span
+            self.centerfreq=centerfreq
             self.do_command("FREQ:SPAN " + str(self.span))
+            self.do_command("FREQ:center {}".format(str(self.centerfreq)))
 
         self.setup_done = True
 
@@ -187,7 +190,7 @@ class speccy(ff.fieldfox):
         if int(self.span)!=0:
             raise Exception("use fd version of this command (or update self.span)!")        
     
-        stime=self.do_command(cmd)("SENS:sweep:time {}".format(str(stime)))
+        stime=self.do_command("SENS:sweep:time {}".format(str(stime)))
         self.stime=stime
 
 
@@ -204,8 +207,26 @@ class speccy(ff.fieldfox):
         """ collect trace, same naming as in NA """
         self.traces=[]
         self.traces.append(self.get_trace())
-        self.make_abscissa() #afterwards, to not prolong with aquisition if setup_done==True
+        if self.span!=0:
+            self.make_abscissa() #afterwards, to not prolong with aquisition if setup_done==True
+        else:
+            self.make_t_abscissa()
 
+
+    def make_t_abscissa(self):
+        """ fetch t-axis stuff from SA 
+            (sidenote: zerospan csv export on fieldfox yields no usable axis)
+        """
+        if not self.setup_done:
+            self.numPoints=self.do_query_string("SENS:SWE:POIN?")
+            self.centerfreq=self.do_query_string("SENS:FREQ:center?")
+
+        # always get:    
+        self.get_sweeptime()#self.stime
+            
+        # build
+        self.abscissa = np.linspace(float(0),float(self.stime),int(self.numPoints)) 
+    
 
     def save_csv(self,filename):
         """ save SA data - strictly speaking no dB but dBm but whatevs """ # HACK see if it works
@@ -248,6 +269,6 @@ if testing:
         
         print("took {:.2f}s for sweeping, {:.2f}s for fetch 'n save".format(t2-t1,t3-t2))
         
-        spek.ff_title(myvspekna.cal_str())#empty titlebar
+        spek.ff_title(spek.cal_str())#empty titlebar
         
         print(spek.query_setup())
