@@ -93,10 +93,10 @@ class speccy(ff.fieldfox):
         """
 
         if int(self.span)==0:
-            raise Exception("use non-fd version of this command!")
+            raise Exception("use non-fd version of this command (or update self.span)!")
 
         # note: "sweep" needs to be written out, "SWE" seems to not work
-        self.do_command("sweep:ACQ:AUTO 0")
+        self.do_command("sweep:ACQ:AUTO 0") # $HACK dunno whether this is necessary
         self.do_command("sweep:ACQ " + str(stime))#sweep:aquisition      
         
         self.stime=stime  
@@ -127,11 +127,68 @@ class speccy(ff.fieldfox):
         """
 
         if int(self.span)==0:
-            raise Exception("use non-fd version of this command!")        
+            raise Exception("use non-fd version of this command (or update self.span)!")        
     
         stime=self.do_query_string("SENS:sweep:acq?")#sense:sweep:aquisition
         self.stime=stime
         return stime
+
+
+    def get_sweeptime(self):
+        """ 
+        [:SENSe]:SWEep:TIME <num>
+        (Read-Write) Set and query the sweep time of the measurement. The actual sweep time that is displayed
+        on the screen will usually be higher than this value due to the overhead sweep time.
+        
+        In SA mode, use this command for Zerospan measurements.
+        To set and read sweep time for Non-zerospan measurements in SA mode, use
+        [:SENSe]:SWEep:ACQuisition.
+        
+        Relevant Modes CAT, NA, SA, RTSA
+        Parameters
+        <num> Sweep time in seconds.
+        
+        Examples SWE:TIME .250
+        Query Syntax [:SENSe]:SWEep:TIME?
+        
+        Return Type Numeric
+        Default 0
+        """
+
+        if int(self.span)!=0:
+            raise Exception("use fd version of this command (or update self.span)!")        
+    
+        stime=self.do_query_string("SENS:sweep:time?")
+        self.stime=stime
+        return stime
+
+
+    def set_sweeptime(self,stime):
+        """ 
+        [:SENSe]:SWEep:TIME <num>
+        (Read-Write) Set and query the sweep time of the measurement. The actual sweep time that is displayed
+        on the screen will usually be higher than this value due to the overhead sweep time.
+        
+        In SA mode, use this command for Zerospan measurements.
+        To set and read sweep time for Non-zerospan measurements in SA mode, use
+        [:SENSe]:SWEep:ACQuisition.
+        
+        Relevant Modes CAT, NA, SA, RTSA
+        Parameters
+        <num> Sweep time in seconds.
+        
+        Examples SWE:TIME .250
+        Query Syntax [:SENSe]:SWEep:TIME?
+        
+        Return Type Numeric
+        Default 0
+        """
+
+        if int(self.span)!=0:
+            raise Exception("use fd version of this command (or update self.span)!")        
+    
+        stime=self.do_command(cmd)("SENS:sweep:time {}".format(str(stime)))
+        self.stime=stime
 
 
     def get_trace(self):
