@@ -48,9 +48,9 @@ class speccy(ff.fieldfox):
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
         super(speccy, self).__init__(myprint=myprint,instrname=instrname, qdelay=qdelay) # call parent
-
+        
         self.traces = []
-
+        
         self.setup_done = False
 
 
@@ -66,6 +66,14 @@ class speccy(ff.fieldfox):
             self.do_command("FREQ:SPAN " + str(self.span))
 
         self.setup_done = True
+
+
+    def set_sweeptime(self,time):
+        pass # sweep:aquisition
+
+
+    def get_sweeptime(self,time):
+        pass #sense:sweep:aquisition
 
 
     def get_trace(self):
