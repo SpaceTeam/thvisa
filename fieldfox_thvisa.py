@@ -223,7 +223,7 @@ class fieldfox(thv.thInstr):
         if self.role=="NA":
             log.append(self.askandlog("BWID?"))
             log.append(self.askandlog("SOUR:POW:ALC?"))
-            log.append(self.cal_str())
+            log.append(self.cal_str()) # ask usercal and report # HACK - calls fct defined in NA class variant (child)
         else: # SA speccy
             log.append(self.askandlog("SENS:FREQ:SPAN?"))
 

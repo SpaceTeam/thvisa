@@ -140,6 +140,9 @@ class VNA(ff.fieldfox):
     
     
     def is_cal_d(self):
+        """ - query cal status
+            - return bool
+            """
         res=self.do_query_string("sense:correction:user:state?")
         if int(res):#cast to int
             return 1
@@ -148,6 +151,9 @@ class VNA(ff.fieldfox):
 
 
     def cal_str(self):
+        """ - query cal status
+            - make str
+            """
         return ("usercal is done?: "+str(self.is_cal_d()))
 
 
