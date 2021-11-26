@@ -11,11 +11,17 @@ Created on Sun May 02 2021
 import time
 import numpy as np # abscissa
 
+try:
+    import thvisa as thv # import common functions
+except:
+    try:
+        from thvisa import thvisa as thv # if called as module
+    except:
+        print("failed to import module directly or via submodule -  mind adding them with underscores not operators (minuses aka dashes, etc.)")
+
 if __name__ == '__main__': # test if called as executable, not as library, regular prints allowed
-    import thvisa as thv # import common visa functions
     testing = True
 else:
-    import thvisa.thvisa as thv # if called as module
     testing = False
 
 

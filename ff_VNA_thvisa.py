@@ -14,21 +14,20 @@ import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
 
+try:
+    import fieldfox_thvisa as ff # import common functions
+except:
+    try:
+        from thvisa import fieldfox_thvisa as ff # if called as module
+    except:
+        print("failed to import module directly or via submodule -  mind adding them with underscores not operators (minuses aka dashes, etc.)")
+
 
 #-#-# module test #-#-#
 testing=False # imports don't seem to traverse this before reaching EOF and complaining about undef_bool !?
 if __name__ == '__main__': # test if called as executable, not as library    
     testing=True
     #tester()#since this is no fct definition, can't call this, also py has no forward-declaration option
-
-try:
-    import fieldfox_thvisa as ff # import common functions
-except:
-    try:
-        import thvisa.fieldfox_thvisa as ff # if called as module
-    except:
-        print("failed to import module directly or via submodule -  mind adding them with underscores not operators (minuses aka dashes, etc.)")
-
 
 class VNA(ff.fieldfox):
 
