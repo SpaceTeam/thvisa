@@ -120,7 +120,7 @@ class VNA(ff.fieldfox):
     
     def save_csv(self,filename):
         
-        s2p_data = [df(self.abscissa)] # initialize concatenation array
+        s2p_data = [df(self.abscissa)] # initialize collect array
         
         for trace in self.traces:
             # RE = trace[:,0]
@@ -132,8 +132,10 @@ class VNA(ff.fieldfox):
             s2p_data.append(df(angle))
             
         
-        s2p_frame = pd.concat(s2p_data, axis=1) # concat the concat array
-        s2p_frame.to_csv(filename, index=False, sep ='\t', header=False) # save
+        s2p_frame = pd.concat(s2p_data, axis=1) # concat the collect-array
+        s2pheader="# Hz S DB R 50"
+        #s2p_frame = pd.concat([pd.DataFrame(pd.Series(s2pheader)),s2p_data], ignore_index=True) # add header for s2p readers
+        s2p_frame.to_csv(filename, index=False, sep ='\t', header=[s2pheader, "", "", "", "", "", "", "", ""]) # save
         # notes:    abscissa is column not index so ignore index
         #           header is columname overwrite
         self.myprint("saved "+filename)
