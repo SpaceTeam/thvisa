@@ -206,7 +206,7 @@ if testing:
         t2 = perf_counter()
 
         myvna.collect_traces()
-        myvna.save_csv("dmu75-parkedleft-called_on-air_closeddoor.s2p")
+        myvna.save_csv("now.s2p")
         t3 = perf_counter()
         
         print("took {:.2f}s for sweeping, {:.2f}s for fetch 'n save".format(t2-t1,t3-t2))
@@ -214,3 +214,17 @@ if testing:
         myvna.ff_title(myvna.cal_str())#empty titlebar
         
         print(myvna.query_setup())
+
+
+pull_screen = False
+if pull_screen: # no measurement setup or trigger, only pulls whats on screen, ideally "on hold"
+    with VNA() as myvna:
+        #myvna.ff_title("Hello")
+        #myvna.errcheck() # because why not
+        
+        myvna.collect_traces()
+        myvna.save_csv("now.s2p")
+        
+        #myvna.ff_title(myvna.cal_str())#empty titlebar
+        
+        #print(myvna.query_setup())
