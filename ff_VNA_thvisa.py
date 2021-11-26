@@ -126,7 +126,8 @@ class VNA(ff.fieldfox):
             # RE = trace[:,0]
             # IM = trace[:,1]
             S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
-            angle = 180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) #np.unwrap doesn't change anything; still different wrapping
+            angle = -180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) # "-" to run into correct direction
+            angle = np.unwrap(2*angle)/2
             s2p_data.append(df(S_dB))
             s2p_data.append(df(angle))
             
