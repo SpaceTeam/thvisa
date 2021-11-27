@@ -11,8 +11,14 @@ Created on Sun May 02 2021
 import time
 import numpy as np # abscissa
 
+# import class not whole module
+# - works both internally (called as __main__ f. testing)
+# - and externally (called as submodule)
+#from thvisa import thInstr as thi 
+
 try:
     import thvisa as thv # import common functions
+    from thvisa import thInstr # this should not do anything but otherwise calling subm fails as "name fieldfox not defined"
 except:
     try:
         from thvisa import thvisa as thv # if called as module

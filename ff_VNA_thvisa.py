@@ -13,15 +13,27 @@ import numpy as np #math
 import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
+import os
 
+print(os.getcwd())
+module="fieldfox_thvisa"
+print(os.path.exists(module+".py"))
+print(os.path.exists(os.path.join("thvisa",module+".py")))
 try:
     import fieldfox_thvisa as ff # import common functions
+    fieldfox = ff.fieldfox
 except:
+    pass
     try:
-        from thvisa import fieldfox_thvisa as ff # if called as module
+        print("two")
+        #import thvisa.fieldfox_thvisa as ff # if called as module
+        from thvisa.fieldfox_thvisa import fieldfox # if called as module
+        #import importlib
+        #importlib.import_module("thvisa.fieldfox_thvisa", __name__)
+        #ff = fieldfox_thvisa
+        print("three")
     except:
         print("failed to import module directly or via submodule -  mind adding them with underscores not operators (minuses aka dashes, etc.)")
-
 
 #-#-# module test #-#-#
 testing=False # imports don't seem to traverse this before reaching EOF and complaining about undef_bool !?
@@ -29,7 +41,7 @@ if __name__ == '__main__': # test if called as executable, not as library
     testing=True
     #tester()#since this is no fct definition, can't call this, also py has no forward-declaration option
 
-class VNA(ff.fieldfox):
+class VNA(fieldfox):
 
     # overwrite class inherited defaults
     myprintdef = print
