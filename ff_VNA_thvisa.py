@@ -134,7 +134,7 @@ class VNA(fieldfox):
         
         s2p_data = [df(self.abscissa)] # initialize collect array
         
-        angle_off=[0,180,180,180]
+        angle_off=[0,180,180,-180]
         angle_coeff=[-1,-1,-1,-1]# S11 & S22 "-" to run into correct direction
         angle_mask=[1,0,0,1]
         for i,trace in enumerate(self.traces):
