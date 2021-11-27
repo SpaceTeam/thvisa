@@ -13,12 +13,12 @@ import numpy as np #math
 import pandas as pd #tables
 from pandas import DataFrame as df
 from time import perf_counter
-import os
+#import os
 
-print(os.getcwd())
-module="fieldfox_thvisa"
-print(os.path.exists(module+".py"))
-print(os.path.exists(os.path.join("thvisa",module+".py")))
+#print(os.getcwd())
+#module="fieldfox_thvisa"
+#print(os.path.exists(module+".py"))
+#print(os.path.exists(os.path.join("thvisa",module+".py")))
 try:
     import fieldfox_thvisa as ff # import common functions
     fieldfox = ff.fieldfox
@@ -225,7 +225,7 @@ if testing:
         
         myvna.ff_title(myvna.cal_str())#empty titlebar
         
-        print(myvna.query_setup())
+        #print(myvna.query_setup())
 
 
 pull_screen = False
