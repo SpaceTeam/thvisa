@@ -134,21 +134,13 @@ class VNA(fieldfox):
         
         s2p_data = [df(self.abscissa)] # initialize collect array
         
-        angle_off=[0,180,180,-180]
+        angle_off=[0,0,0,0]
         angle_coeff=[-1,-1,-1,-1]# S11 & S22 "-" to run into correct direction
-        angle_mask=[1,0,0,1]
         for i,trace in enumerate(self.traces):
             # RE = trace[:,0]
             # IM = trace[:,1]
             S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
-            angle = angle_off[i] + angle_coeff[i] * 180/np.pi * (np.arctan(-trace[:,1] / trace[:,0])) 
-            
-            if angle_mask[i]==1: 
-                angle = np.unwrap(2*angle)/2 # works (S11, S22) - s22 has static offset
-            else:
-                angle = np.unwrap(4*angle)/4
-                # seems to recover s21
-                
+            angle = angle_off[i] + angle_coeff[i] * 180/np.pi * (np.arctan2(-trace[:,1], trace[:,0])) 
             
             s2p_data.append(df(S_dB))
             s2p_data.append(df(angle))
