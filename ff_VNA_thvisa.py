@@ -134,13 +134,11 @@ class VNA(fieldfox):
         
         s2p_data = [df(self.abscissa)] # initialize collect array
         
-        angle_off=[0,0,0,0]
-        angle_coeff=[-1,-1,-1,-1]# S11 & S22 "-" to run into correct direction
-        for i,trace in enumerate(self.traces):
+        for trace in (self.traces):
             # RE = trace[:,0]
             # IM = trace[:,1]
             S_dB = 20*np.log10( np.sqrt(trace[:,0]*trace[:,0] + trace[:,1]*trace[:,1]) )
-            angle = angle_off[i] + angle_coeff[i] * 180/np.pi * (np.arctan2(-trace[:,1], trace[:,0])) 
+            angle = -1 * 180/np.pi * (np.arctan2(-trace[:,1], trace[:,0])) 
             
             s2p_data.append(df(S_dB))
             s2p_data.append(df(angle))
@@ -148,10 +146,10 @@ class VNA(fieldfox):
         
         s2p_frame = pd.concat(s2p_data, axis=1) # concat the collect-array
         s2pheader="# Hz S DB R 50"
-        #s2p_frame = pd.concat([pd.DataFrame(pd.Series(s2pheader)),s2p_data], ignore_index=True) # add header for s2p readers
+        # add s2p header - needs empty elements as well (pandas wants a str per column label)
         s2p_frame.to_csv(filename, index=False, sep ='\t', header=[s2pheader, "", "", "", "", "", "", "", ""]) # save
-        # notes:    abscissa is column not index so ignore index
-        #           header is columname overwrite
+        # ignore index - to not have numbers before freqs
+
         self.myprint("saved "+filename)
     
     
@@ -205,7 +203,7 @@ class VNA(fieldfox):
         
         
     
-pull_screen = True
+pull_screen = False
 #### test this library using semi Unit Testing ####
 if testing and not pull_screen:
     with VNA() as myvna:
