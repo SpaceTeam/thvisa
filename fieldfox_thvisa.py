@@ -211,12 +211,12 @@ class fieldfox(thv.thInstr):
         pass
 
 
-    def center_on_peak_marker(self, nr=1, trace=1, center=True, settlet=0.1):
+    def center_on_peak_marker(self, nr=1, trace=1, center=True, settlet=0.3):
         """ make marker, goto peak, save values, center , ret values
         options
             - nr: marker nr
             - trace (NA): which trace to perform on?
-            - settletime (s): larger than 1 sweep i guess, defaults 0.1s
+            - settletime (s): 1x/10x sweep time (NA/SA) i guess, defaults 0.3s
         """
         #make marker
         self.do_command("CALC:MARK{}:ACTivate".format(nr)) # enough to create & activate
@@ -227,7 +227,7 @@ class fieldfox(thv.thInstr):
             self.do_command("CALC:MARK{}:TRAC {}".format(nr,trace))
         
         #lock to maximum
-        time.sleep(0.1)#settle needed!! otherwise too fast sometimes
+        time.sleep(settlet)#settle needed!! otherwise too fast sometimes
         self.do_command("CALC:MARK{}:FUNC:MAX".format(nr))#(SA/NA no query)
         
         #q = self.do_query_string("CALC:MARK:FUNC:PEXC?")# reads peak default id val
