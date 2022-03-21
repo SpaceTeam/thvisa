@@ -211,6 +211,37 @@ class fieldfox(thv.thInstr):
         pass
 
 
+    def center_on_peak_marker(self, nr=1, trace=1, center=True):
+        """ make marker, goto peak, save values, center , ret values
+        options
+            - nr: marker nr
+            - trace (NA): which trace to perform on?
+        """
+        #make marker
+        self.do_command("CALC:MARK{}:ACTivate".format(nr)) # enough to create & activate
+        #self.do_command("CALC:MARK{}:Norm".format(nr)) # fails
+            #set type
+            #self.do_command("CALCulate[:SELected]:MARKer:FORMat <char>")
+        if self.role=="NA":# untested
+            self.do_command("CALC:MARK{}:TRAC {}".format(nr,trace))
+        #lock to maximum
+        self.do_command("CALC:MARK{}:FUNC:MAX".format(nr))#(SA/NA no query)
+        #query peek excursion (is it actually significant)
+        q = self.do_query_string("CALC:MARK:FUNC:PEXC?")
+        print(q)
+        #read marker values x/y (pg 226)
+        X = self.do_query_string("CALC:MARK{}:X?".format(nr))
+        print(X)
+        Y = self.do_query_string("CALC:MARK{}:Y?".format(nr))
+        print(Y)
+        if center:
+            #read new center freq from marker
+            self.do_command("CALC:MARK{}:SET:CENT".format(nr))
+
+        #return X,Y
+
+
+
     def ff_title(self, title=None):
         if title!=None:
             self.do_command(str("DISPlay:TITLe:DATA \'"+title+"\'"))
