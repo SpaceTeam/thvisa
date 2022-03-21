@@ -211,11 +211,12 @@ class fieldfox(thv.thInstr):
         pass
 
 
-    def center_on_peak_marker(self, nr=1, trace=1, center=True):
+    def center_on_peak_marker(self, nr=1, trace=1, center=True, settlet=0.1):
         """ make marker, goto peak, save values, center , ret values
         options
             - nr: marker nr
             - trace (NA): which trace to perform on?
+            - settletime (s): larger than 1 sweep i guess, defaults 0.1s
         """
         #make marker
         self.do_command("CALC:MARK{}:ACTivate".format(nr)) # enough to create & activate
@@ -224,21 +225,22 @@ class fieldfox(thv.thInstr):
             #self.do_command("CALCulate[:SELected]:MARKer:FORMat <char>")
         if self.role=="NA":# untested
             self.do_command("CALC:MARK{}:TRAC {}".format(nr,trace))
+        
         #lock to maximum
+        time.sleep(0.1)#settle needed!! otherwise too fast sometimes
         self.do_command("CALC:MARK{}:FUNC:MAX".format(nr))#(SA/NA no query)
-        #query peek excursion (is it actually significant)
-        q = self.do_query_string("CALC:MARK:FUNC:PEXC?")
-        print(q)
+        
+        #q = self.do_query_string("CALC:MARK:FUNC:PEXC?")# reads peak default id val
+        
         #read marker values x/y (pg 226)
         X = self.do_query_string("CALC:MARK{}:X?".format(nr))
-        print(X)
         Y = self.do_query_string("CALC:MARK{}:Y?".format(nr))
-        print(Y)
+        
         if center:
             #read new center freq from marker
             self.do_command("CALC:MARK{}:SET:CENT".format(nr))
 
-        #return X,Y
+        return X,Y
 
 
 
