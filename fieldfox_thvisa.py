@@ -51,6 +51,7 @@ class fieldfox(thv.thInstr):
 
         self.abscissa = []
         self.avgs=1 # default since always sent
+        self.title = None
         
         ## call parent init ##
         # .. righthand stuff has to be "self." properties and unusually, has no ".self" prefix
@@ -248,6 +249,7 @@ class fieldfox(thv.thInstr):
         if title!=None:
             self.do_command(str("DISPlay:TITLe:DATA \'"+title+"\'"))
             self.do_command("disp:TITL 1")
+            self.title = title
         else:
             self.do_command("disp:TITL 0")
 
