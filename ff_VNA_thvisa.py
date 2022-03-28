@@ -117,6 +117,11 @@ class VNA(fieldfox):
         #                           search online manual for "Data Chain: Standard vs 8510"
         #                           http://na.support.keysight.com/fieldfox/help/SupHelp/FieldFox.htm
         trace_csv = self.do_query_string("CALC:DATA:SDATa?")  # sdata - unformatted real+imag :)
+        #self.fftitle(self.title + "got")
+        #t1=perf_counter()
+        #self.do_command("*OPC?", OPC=0)# don't ask opc twice # Hack check if done #didn't help
+        #t2=perf_counter()
+        #print("opc costs time: {}".format(t2-t1)) 0.003711s --> whatevs
         trace_data = np.array(trace_csv.split(",")).astype(float)
         trace_data=np.reshape(trace_data,(-1,2)) # now y1+y2 sit in same row
         
