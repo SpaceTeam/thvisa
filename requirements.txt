@@ -1,0 +1,6 @@
+numpy
+pandas
+pyvisa
+pyvisa-py
+matplotlib
+python-usbtmc

@@ -6,6 +6,7 @@ object-oriented easyness for pythonic access to
 * Siglent rspd3303c/spd3303c 2.5CH lab PSU
   
 via the SCPI standard. Or to be more precise, the specific implementations, utilizing the pyvisa framwork.
+
 ## examples ##
 see "main" sections of InfiniiVision_thisa.py and spd3303c_thvisa.py
 
@@ -16,6 +17,9 @@ see "main" sections of InfiniiVision_thisa.py and spd3303c_thvisa.py
 
 
 ### linux specific ##
+(can try setup.sh after chmod+X setup.sh, adapt udev rules afterwards)
+
+#### linux manual ####
 update system and install python3 with pip, libatlas to avoid numpy error
 * sudo apt update
 * sudo apt dist-upgrade
@@ -34,7 +38,7 @@ update system and install python3 with pip, libatlas to avoid numpy error
 
 #### setup udev-rules ####
 An example of how to change _/etc/udev/rules.d/usb.rules_ to accomodate not being sudo for accessing pyvisa/usbtmc devices is in usb.rules.
-However, the group "thomas" has to be changed to reflect a group your active user is in (execute "groups" command)
+(The group "plugdev" should be assigned to each user, check with command "groups" to be sure if your current user is)
 
 * append or make the file _/etc/udev/rules.d/usb.rules_ according to usb.rules provided
 * either _udevadm control --reload-rules_ or _udevcontrol reload_rules_ dependent on kernel version
@@ -49,5 +53,5 @@ further info:
 
 
 #### git setup ####
-* users don't need a git client, download the zip and ignore this section from hereon
+* users don't need a git client, download the zip and ignore this section from here on
 * use any git client you want
