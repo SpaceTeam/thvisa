@@ -62,25 +62,24 @@ class speccy(ff.fieldfox):
         super(speccy, self).__exit__( exc_type, exc_value, tb) # call parent
 
 
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, avgs=1,
-                    #and SA specific params
-                    span="", centerfreq="", atten=30, rbw="",vbw=""):
-        super(speccy, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, avgs=avgs) # call parent
+    def setup(self, span="", centerfreq="", atten=30, rbw="",vbw="", **kwargs):
+        """ setup instrument in SA mode"""
+        super(speccy, self).setup(**kwargs) # call parent and route through common/unknown parameters
         
-        # case span n centerfreq given (probably zerospan)
-        if span!="":
-            self.span = span
-            self.centerfreq=centerfreq
-            self.do_command("FREQ:SPAN " + str(span))
-            self.do_command("FREQ:center {}".format(centerfreq))
-
-        # works at least in zerospan:
+        # set default atten for safety
         self.do_command("power:att {}".format(atten)) 
         self.atten=atten
-        if rbw!="":
+        
+        if span:
+            self.span = span
+            self.do_command("FREQ:SPAN " + str(span))
+        if centerfreq:
+            self.centerfreq=centerfreq
+            self.do_command("FREQ:center {}".format(centerfreq))
+        if rbw:
             self.do_command("bandwidth {}".format(rbw))
             self.rbw=rbw
-        if vbw!="":
+        if vbw:
             self.do_command("bandwidth:video {}".format(vbw))
             self.vbw=vbw
 

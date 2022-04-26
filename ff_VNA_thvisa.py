@@ -70,18 +70,16 @@ class VNA(fieldfox):
         super(VNA, self).__exit__( exc_type, exc_value, tb) # call parent
 
 
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1, sourcepower = "high" ):
+    def setup(self, ifbw=1E3, sourcepower = "high", **kwargs):
+        """ setup instrument in VNA mode"""
+        super(VNA, self).setup(**kwargs) # call parent and route through common/unknown parameters
         
-        # first set freq range
-        super(VNA, self).setup(hard=hard, numPoints = numPoints, startFreq = startFreq, stopFreq = stopFreq, ifbw=ifbw, avgs=avgs) # call parent
+        if ifbw:
+            self.ifbw=ifbw
+            self.do_command("BWID " + str(self.ifbw))
         
-        # common rf settings
-        self.ifbw=ifbw
+        # change stimulus, defaults to high if nothing given, yolo
         self.sourcepower = sourcepower
-
-        self.do_command("BWID " + str(self.ifbw))
-        
-        # then change stimulus
         if self.sourcepower=="high":
             self.do_command("SOUR:POW:ALC HIGH")#autolevel high
         elif self.sourcepower=="low":

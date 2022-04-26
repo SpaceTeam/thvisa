@@ -69,26 +69,29 @@ class fieldfox(thv.thInstr):
 
 
     ## main shared functions ##
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, avgs=1):
+    def setup(self, hard=True, numPoints = 1001,
+            startFreq = 2.4E9, stopFreq = 2.5E9, avgs=1):
         """ parent setup class
             to be called and appended by ff_VNA or ff_speccy children"""
         if hard:
-            # Preset the FieldFox  
+            # preset fieldfox 
             self.do_command("SYST:PRES")#"SYST:PRES;*OPC?" # docommand does opc inherited by fieldfox mainclass
-            # Set mode to VNA   
+            # set mode to VNA/SA   
             self.do_command("INST:SEL '{}'".format(self.role))
             
-                
-        # abscissa s2p files
-        self.numPoints = numPoints
-        self.startFreq = startFreq
-        self.stopFreq = stopFreq
+        # note - abscissa of s2p files needs points, start, stop!
+        if numPoints:
+            self.numPoints = numPoints
+            self.do_command("SENS:SWE:POIN " + str(self.numPoints))
+        if startFreq:
+            self.startFreq = startFreq
+            self.do_command("SENS:FREQ:START " + str(self.startFreq))
+        if stopFreq:
+            self.stopFreq = stopFreq
+            self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
         
-        ## msr setup ##
-        self.do_command("SENS:SWE:POIN " + str(self.numPoints))
-        self.do_command("SENS:FREQ:START " + str(self.startFreq))
-        self.do_command("SENS:FREQ:STOP " + str(self.stopFreq))
-        self.set_avgs(avgs)
+        if avgs:
+            self.set_avgs(avgs)
 
         #self.setup_done = True # in childclasses
 
