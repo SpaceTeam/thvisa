@@ -172,7 +172,7 @@ class thInstr(object):
         return self
     
     def exception(self, e="lazyprogrammer"):
-        self.myprint("Exception: ",e)
+        self.myprint("Exception: {}".format(e))
         self.exit()
         
     def getinstrument(self, name,qdelay=0): #name segment as input #$todo: inline if no other use 
