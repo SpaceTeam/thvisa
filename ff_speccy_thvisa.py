@@ -70,7 +70,8 @@ class speccy(ff.fieldfox):
         self.do_command("power:att {}".format(atten)) 
         self.atten=atten
         
-        if span:
+        # check if  empty string to allow zero values
+        if span!="":
             self.span = span
             self.do_command("FREQ:SPAN " + str(span))
         if centerfreq:
@@ -90,7 +91,7 @@ class speccy(ff.fieldfox):
         """
         set trigger 
         - external/internal (def:int)
-        - slope (def pos = 1)
+        - slope +1/-1 bool (def)
         - single (def False)
 
         pg554, 564 in prog manual"""
@@ -99,7 +100,7 @@ class speccy(ff.fieldfox):
             self.do_command("TRIG:SOUR EXT")
         else:
             self.do_command("TRIG:SOUR FREE")
-            
+
         if slope:
             self.do_command("TRIG:SLOP POS")
         else:
