@@ -216,7 +216,7 @@ class fieldfox(thv.thInstr):
         """ make marker, goto peak, save values, center , ret values
         options
             - nr: marker nr
-            - trace (NA): which trace to perform on?
+            - trace (NA): UNTESTED which trace to perform on?
             - settletime (s): 1x/10x sweep time (NA/SA) i guess, defaults 0.3s
         """
         #make marker
