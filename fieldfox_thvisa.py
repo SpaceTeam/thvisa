@@ -69,7 +69,7 @@ class fieldfox(thv.thInstr):
 
 
     ## main shared functions ##
-    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, ifbw=1E3, avgs=1):
+    def setup(self, hard=True, numPoints = 1001, startFreq = 2.4E9, stopFreq = 2.5E9, avgs=1):
         """ parent setup class
             to be called and appended by ff_VNA or ff_speccy children"""
         if hard:
@@ -79,7 +79,7 @@ class fieldfox(thv.thInstr):
             self.do_command("INST:SEL '{}'".format(self.role))
             
                 
-        # abscissa
+        # abscissa s2p files
         self.numPoints = numPoints
         self.startFreq = startFreq
         self.stopFreq = stopFreq
