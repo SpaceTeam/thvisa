@@ -86,6 +86,31 @@ class speccy(ff.fieldfox):
         self.setup_done = True
 
 
+    def set_trig(self, ext=False, slope=1, single=False):
+        """
+        set trigger 
+        - external/internal (def:int)
+        - slope (def pos = 1)
+        - single (def False)
+
+        pg554, 564 in prog manual"""
+        
+        if ext:
+            self.do_command("TRIG:SOUR EXT")
+        else:
+            self.do_command("TRIG:SOUR FREE")
+            
+        if slope:
+            self.do_command("TRIG:SLOP POS")
+        else:
+            self.do_command("TRIG:SLOP NEG")
+
+        if ext or (not single): # ext_trig needs CONT for some reason
+            self.do_command("INIT:CONT ON") # CONT:ON replaces do_sweeps single-trigs
+        else:
+            self.do_command("INIT:CONT OFF")
+
+
     def set_fd_sweeptime(self,stime):
         """ 
         SWEep:ACQuisition <num>
